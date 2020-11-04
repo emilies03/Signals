@@ -1,0 +1,8 @@
+# ignore data arrays
+DIFF.dat
+prs_diff.dat
+prs_sum.dat
+SUM.dat
+modulated_DIFF.dat
+modulated_SUM.dat
+modulated_MIXED.dat
