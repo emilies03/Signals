@@ -1,5 +1,6 @@
 # define the name of your source file(s)
 SRCS = ./src/digital_demodulation.c
+SRCS = ./src/hilbert_filter.c
 
 # define the name of the object files(s) - we can do this automatically
 OBJS = $(SRCS:.c=.o)
