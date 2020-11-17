@@ -1,0 +1,73 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<stdint.h>
+
+static int load_files();
+
+int main(){
+
+	load_files();
+
+	// apply kaiser window
+
+	// hilbert filter to get phase of each 16 points
+
+	// times kaiser by hilbert
+
+	// compare phase of consectutive bits
+
+	// inverse XOR
+
+	// group 8 bits into value 
+
+	exit(0); // all is good
+}
+
+
+int load_files()
+{
+	FILE *fin1, *fin2, *fout;
+	uint64_t in1, in2, out;
+
+	// open input files as binary read-only
+	fin1=fopen("data/modulated_diff.dat","rb");
+	printf("Opening modulated_diff\n");
+	if(fin1 == NULL) {
+		printf("ERROR: modulated_diff does not exist\n");
+		exit(1);
+	}
+	printf("modulated_diff opened succefully\n");
+
+	fin2=fopen("data/modulated_sum.dat","rb");
+	printf("Opening modulated_sum\n");
+	if(fin2 == NULL) {
+		printf("ERROR: modulated_sum does not exist\n");
+		exit(1);
+	}
+	printf("modulated_suff opened successfully\n");
+
+	// open output files as binary - overwrite the file if it alredy exists
+	fout=fopen("data/output","w+b");
+	if(fout == NULL) {
+		printf("ERROR: output cannot be created\n");
+		exit(1);
+	}
+
+	printf("processing ...\n");
+
+	// keep reading a float in each file until the end
+	while(fread(&in1, sizeof(uint64_t), 1, fin1) && fread(&in2, sizeof(uint64_t), 1, fin2)){
+      // add the inputs and write the sum to the output
+      out = in1+in2;
+		fwrite(&out, sizeof(uint64_t), 1, fout);
+	}
+
+	printf("done\n");
+
+	// close the files
+	fclose(fin1);
+	fclose(fin2);
+	fclose(fout);
+
+	return 1;
+}
