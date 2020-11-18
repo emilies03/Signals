@@ -2,15 +2,14 @@
 #include<stdlib.h>
 #include<math.h>
 
-int main(){
+int hilbert_filter(int filter_order, float hilbert_filter_coefficients[filter_order+1]){
 
     //Sets order of filter
-    int filter_order = 40;
     int numbers[filter_order+1];
     int i;
 
     //This array contains the final hilbert filter coefficients
-    float hilbert_filter_coefficients[filter_order+1];
+    //float hilbert_filter_coefficients[filter_order+1];
     
  
 
@@ -30,10 +29,10 @@ int main(){
 
         //uncomment to print filter coefficients to terminal
 
-        // printf("%f", hilbert_filter_coefficients[i]);
-        // printf("\n");
+        //printf("%f", hilbert_filter_coefficients[i]);
+        //printf("\n");
     }
 
-    exit(0);
+    return 1;
 
 }

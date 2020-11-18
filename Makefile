@@ -1,6 +1,5 @@
 # define the name of your source file(s)
 SRCS = ./src/digital_demodulation.c
-SRCS = ./src/hilbert_filter.c
 
 # define the name of the object files(s) - we can do this automatically
 OBJS = $(SRCS:.c=.o)
@@ -15,7 +14,7 @@ CFLAGS = -Wall -O3 -fstrict-aliasing
 LDFLAGS = -O3 -lm -L/usr/lib
 
 # the name of your executable file (the target) - here we put it in the top directory
-TARGET = build/hilbert_filter
+TARGET = build/digital_demodulator
 
 # actions
 all: $(OBJS)
