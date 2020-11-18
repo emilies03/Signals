@@ -1,12 +1,27 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<stdint.h>
+#include "hilbert_filter.c"
 
 static int load_files();
+int hilbert_filter();
+const int filter_order = 40;
+
 
 int main(){
 
-	load_files();
+	//load_files();
+
+	float hilbert_filter_coefficients[filter_order+1];
+	hilbert_filter(filter_order, hilbert_filter_coefficients);
+
+	
+
+	for(int i=0; i<= filter_order; i++){
+	printf("%f", hilbert_filter_coefficients[i]);
+    printf("\n");
+	}
+
 
 	// apply kaiser window
 
