@@ -2,9 +2,11 @@
 #include<stdlib.h>
 #include<stdint.h>
 #include "hilbert_filter.c"
+#include "kaiser_window.c"
 
 static int load_files();
 int hilbert_filter();
+int kaiser_window();
 const int filter_order = 40;
 
 
@@ -15,19 +17,36 @@ int main(){
 	float hilbert_filter_coefficients[filter_order+1];
 	hilbert_filter(filter_order, hilbert_filter_coefficients);
 
-	
-
+	/*printf("Cam coefficients\n");
 	for(int i=0; i<= filter_order; i++){
-	printf("%f", hilbert_filter_coefficients[i]);
+	printf("%f,", hilbert_filter_coefficients[i]);
+    printf("\n");
+	}*/
+
+	float kaiser_filter_coefficients[filter_order+1];
+	kaiser_window(filter_order, kaiser_filter_coefficients);
+
+	/*	printf("Charlie coefficients\n");
+	for(int i=0; i<= filter_order; i++){
+	printf("%f,", kaiser_filter_coefficients[i]);
+    printf("\n");
+	}*/
+
+
+
+	float windowed_filter_coefficients[filter_order+1];
+	for(int i=0; i<= filter_order; i++)
+	{
+		windowed_filter_coefficients[i] = kaiser_filter_coefficients[i] * hilbert_filter_coefficients[i];
+	};	
+
+/*
+	printf("Charlie-cam coefficients\n");
+	for(int i=0; i<= filter_order; i++){
+	printf("%f,", windowed_filter_coefficients[i]);
     printf("\n");
 	}
-
-
-	// apply kaiser window
-
-	// hilbert filter to get phase of each 16 points
-
-	// times kaiser by hilbert
+*/
 
 	// compare phase of consectutive bits
 
