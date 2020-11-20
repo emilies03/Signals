@@ -14,7 +14,7 @@ CFLAGS = -Wall -O3 -fstrict-aliasing
 LDFLAGS = -O3 -lm -L/usr/lib
 
 # the name of your executable file (the target) - here we put it in the top directory
-TARGET = build/digital_demodulator
+TARGET = build/digital_demodulation
 
 # actions
 all: $(OBJS)

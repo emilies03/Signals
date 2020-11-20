@@ -4,35 +4,52 @@
 #include "hilbert_filter.c"
 #include "kaiser_window.c"
 
-static int load_files();
 int hilbert_filter();
 int kaiser_window();
 const int filter_order = 40;
+int load_files();
+
+float* modulated_diff;
+float* modulated_sum;
 
 
 int main(){
 
-	//load_files();
+	modulated_diff = (float*) malloc(sizeof(float)*98304016);
+	modulated_sum = (float*) malloc(sizeof(float)*98304016);
+
+	printf("Loading modulated sum\n");
+	load_files(modulated_sum, 1);
+
+	printf("Loading modulated diff\n");
+	load_files(modulated_diff, 0);
+
+	printf("Modulated sum is: \n"); 
+    for (int i = 0; i < 30; ++i) { 
+        printf("%.30f, \n", modulated_sum[i]);
+    };
+	printf("Modulated diff is: \n"); 
+    for (int i = 0; i < 30; ++i) { 
+        printf("%.30f, \n", modulated_diff[i]);
+    };
 
 	float hilbert_filter_coefficients[filter_order+1];
 	hilbert_filter(filter_order, hilbert_filter_coefficients);
 
-	/*printf("Cam coefficients\n");
+	printf("Cam coefficients\n");
 	for(int i=0; i<= filter_order; i++){
 	printf("%f,", hilbert_filter_coefficients[i]);
     printf("\n");
-	}*/
+	}
 
 	float kaiser_filter_coefficients[filter_order+1];
 	kaiser_window(filter_order, kaiser_filter_coefficients);
 
-	/*	printf("Charlie coefficients\n");
+	printf("Charlie coefficients\n");
 	for(int i=0; i<= filter_order; i++){
 	printf("%f,", kaiser_filter_coefficients[i]);
     printf("\n");
-	}*/
-
-
+	}
 
 	float windowed_filter_coefficients[filter_order+1];
 	for(int i=0; i<= filter_order; i++)
@@ -40,13 +57,11 @@ int main(){
 		windowed_filter_coefficients[i] = kaiser_filter_coefficients[i] * hilbert_filter_coefficients[i];
 	};	
 
-/*
 	printf("Charlie-cam coefficients\n");
 	for(int i=0; i<= filter_order; i++){
 	printf("%f,", windowed_filter_coefficients[i]);
     printf("\n");
 	}
-*/
 
 	// compare phase of consectutive bits
 
@@ -58,50 +73,38 @@ int main(){
 }
 
 
-int load_files()
+int load_files(float* modulated_array, int load_choice)
 {
-	FILE *fin1, *fin2, *fout;
-	float in1, in2, out;
-
-	// open input files as binary read-only
-	fin1=fopen("data/modulated_diff.dat","rb");
-	printf("Opening modulated_diff\n");
-	if(fin1 == NULL) {
-		printf("ERROR: modulated_diff does not exist\n");
-		exit(1);
+	FILE *fin1;
+	if(load_choice==1)
+	{
+		fin1=fopen("data/modulated_sum.dat","rb");
+		printf("Opening modulated_sum\n");
+		if(fin1 == NULL) {
+			printf("ERROR: modulated_sum does not exist\n");
+			exit(1);
+		}
+		printf("Open modulated_sum successfully\n");
 	}
-	printf("modulated_diff opened succefully\n");
-
-	fin2=fopen("data/modulated_sum.dat","rb");
-	printf("Opening modulated_sum\n");
-	if(fin2 == NULL) {
-		printf("ERROR: modulated_sum does not exist\n");
-		exit(1);
+	else
+	{
+		// open input files as binary read-only
+		fin1=fopen("data/modulated_diff.dat","rb");
+		printf("Opening modulated_diff\n");
+		if(fin1 == NULL) {
+			printf("ERROR: modulated_diff does not exist\n");
+			exit(1);
+		}
+		printf("Opened modulated_diff successfully\n");
 	}
-	printf("modulated_suff opened successfully\n");
+	
+	// reading 98304016 floats in file
+	fread(modulated_array, sizeof(float), 98304016, fin1);
 
-	// open output files as binary - overwrite the file if it alredy exists
-	fout=fopen("data/output","w+b");
-	if(fout == NULL) {
-		printf("ERROR: output cannot be created\n");
-		exit(1);
-	}
-
-	printf("processing ...\n");
-
-	// keep reading a float in each file until the end
-	while(fread(&in1, sizeof(float), 1, fin1) && fread(&in2, sizeof(float), 1, fin2)){
-      // add the inputs and write the sum to the output
-      out = in1+in2;
-		fwrite(&out, sizeof(float), 1, fout);
-	}
-
-	printf("done\n");
+	printf("Modulated signal loading complete\n");
 
 	// close the files
 	fclose(fin1);
-	fclose(fin2);
-	fclose(fout);
 
 	return 1;
 }
