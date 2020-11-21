@@ -3,9 +3,11 @@
 #include<stdint.h>
 #include "hilbert_filter.c"
 #include "kaiser_window.c"
+#include "convolution.c"
 
 int hilbert_filter();
 int kaiser_window();
+int convolution();
 const int filter_order = 40;
 int load_files();
 
@@ -15,6 +17,12 @@ float* modulated_sum;
 
 int main(){
 
+	int e = 4;
+	float sig1[5] = {1,1,0,0,1};
+	float sig2[5] = {0,1,0,0,0};
+	convolution(e,sig1,sig2);
+
+/*
 	modulated_diff = (float*) malloc(sizeof(float)*98304016);
 	modulated_sum = (float*) malloc(sizeof(float)*98304016);
 
@@ -26,11 +34,11 @@ int main(){
 
 	printf("Modulated sum is: \n"); 
     for (int i = 0; i < 30; ++i) { 
-        printf("%.30f, \n", modulated_sum[i]);
+        printf("%.30f, \n", modulated_sum[98304016-i]);
     };
 	printf("Modulated diff is: \n"); 
     for (int i = 0; i < 30; ++i) { 
-        printf("%.30f, \n", modulated_diff[i]);
+        printf("%.30f, \n", modulated_diff[98304016-i]);
     };
 
 	float hilbert_filter_coefficients[filter_order+1];
@@ -56,13 +64,13 @@ int main(){
 	{
 		windowed_filter_coefficients[i] = kaiser_filter_coefficients[i] * hilbert_filter_coefficients[i];
 	};	
-
-	printf("Charlie-cam coefficients\n");
+*/
+/*	printf("Charlie-cam coefficients\n");
 	for(int i=0; i<= filter_order; i++){
 	printf("%f,", windowed_filter_coefficients[i]);
     printf("\n");
 	}
-
+*/
 	// compare phase of consectutive bits
 
 	// inverse XOR
@@ -107,4 +115,5 @@ int load_files(float* modulated_array, int load_choice)
 	fclose(fin1);
 
 	return 1;
+
 }
