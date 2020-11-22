@@ -17,10 +17,9 @@ float* modulated_sum;
 
 int main(){
 
-	int e = 4;
-	float sig1[5] = {1,1,0,0,1};
-	float sig2[5] = {0,1,0,0,0};
-	convolution(e,sig1,sig2);
+	float sig1[4] = {1.1,2.2,3.3,4.4};
+	float sig2[12] = {17.2,19.54,0.8,1.1,0.96,1,1,1,1,1,1,1};
+	convolution(4,12,sig1,sig2);
 
 /*
 	modulated_diff = (float*) malloc(sizeof(float)*98304016);

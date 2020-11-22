@@ -3,36 +3,31 @@
 #include<stdint.h>
 #include<math.h>
 
-int convolution(int filter_order, float signal_1[filter_order+1], float signal_2[filter_order+1])
+int convolution(int length_signal_1, int length_signal_2, float signal_1[length_signal_1], float signal_2[length_signal_2])
 {
-    int i, j;
+    int i, j, track;
     float sum;
-    float reversed_signal_1[filter_order+1];
 
-    float convolution[2*filter_order+1];
-
-    for (i = 0; i <= (filter_order+1)/2; i++) {
-        reversed_signal_1[i] = signal_1[filter_order-i];
-        reversed_signal_1[filter_order-i] = signal_1[i];
-    }
-
-    for (i=0; i<(2*filter_order)+1; i++)
-    {
-        sum =0;
-        for (j=0; j<=i; j++)
-        {
-            printf("conv:");
-            sum += reversed_signal_1[j]*signal_2[filter_order-j];
-            printf("%f, \n", reversed_signal_1[j]);
-            printf("%f, \n", signal_2[filter_order-j]);
-            printf("%f, \n", sum);
+    float convolution[length_signal_1+length_signal_2-1];
+   
+        for(i=0; i<length_signal_1+length_signal_2-1; i++){
+            sum = 0;
+            track = i;
+            for(j=0; j<length_signal_2; j++){
+                if(track>=0 && track<length_signal_1){
+                sum += signal_1[track]*signal_2[j];
+                }
+                track -= 1;
+            }
+            convolution[i] = sum;
         }
-        convolution[i] = sum;
-    }
 
+/*
     printf("convolution: \n"); 
-    for (int i = 0; i < 2*filter_order+1; ++i) { 
+    for (int i = 0; i < length_signal_1+length_signal_2-1; ++i) { 
         printf("%f, \n", convolution[i]);
     };
+*/
+
 return 1;
 }
