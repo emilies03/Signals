@@ -1,6 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<stdint.h>
+#include<math.h>
 #include "hilbert_filter.c"
 #include "kaiser_window.c"
 #include "convolution.c"
@@ -70,37 +71,70 @@ int main(){
 	}
 */
 
+
 	float convolution_output[16+filter_order];
 	float modulated_sum_segment[16];
-	float tail[40] ={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-	float modulated_sum_imaginary[16];
+	float tail[40] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+	float modulated_sum_imaginary[100];
+	float modulated_sum_phase[16];
 
-	for(int i=0;i<16;i++){
-		modulated_sum_segment[i] = modulated_sum[i];
+	for(int j=0; j<5; j++)
+	{
+		for(int i=j*16; i<(j+1)*16; i++){
+			modulated_sum_segment[i] = modulated_sum[i];
+		}
+
+		convolution(filter_order+1, 16, windowed_filter_coefficients,
+			modulated_sum_segment, convolution_output);	
+
+		for(int i=0; i<40; i++){
+			convolution_output[i] = convolution_output[i] + tail[i];
+		}
+
+		for(int i=j*16;i<(j+1)*16;i++){
+			modulated_sum_imaginary[i] = convolution_output[i];
+		}
+
+		for(int i=16; i<56; i++){
+			tail[i] = convolution_output[i];
+		}
+
+	//    for (int i = 0; i < 16+filter_order; i++) { 
+	//        printf("%.30f, \n", convolution_output[i]);
+	//    };
+
+/*
+		for(int i=0; i<16; i++){
+			if (modulated_sum_segment[i]==0)
+			{
+				printf("REAL PART IS ZERO!!!!!!!!!!\n");
+				modulated_sum_phase[i] = 0;
+			}
+			else
+			{
+			modulated_sum_phase[i] = atan(modulated_sum_imaginary[i]/modulated_sum_segment[i]);
+			}
+		}
+		
+		for (int i = 0; i<16; i++) { 
+			printf("%.30f,\n", modulated_sum_imaginary[i]);
+		};
+	printf("\n");	
+		for (int i = 0; i<16; i++) { 
+			printf("%.30f,\n", modulated_sum_segment[i]);
+		};
+	printf("\n");
+		for (int i = 0; i<16; i++) { 
+			printf("%.30f, \n", modulated_sum_phase[i]);
+		};
+		printf("\n");
+		printf("\n");
+		*/
 	}
-
-	convolution(filter_order+1, 16, windowed_filter_coefficients,
-		modulated_sum_segment, convolution_output);	
-
-	for(int i=0; i<40; i++){
-		convolution_output[i] = convolution_output[i] + tail[i];
-	}
-
-//    for (int i = 0; i < 16+filter_order; i++) { 
-//        printf("%.30f, \n", convolution_output[i]);
-//    };
-
-	for(int i=20; i<36; i++){
-		modulated_sum_imaginary[i] = convolution_output[i] + tail[i-20];
-	}
-	for(int i=16; i<56; i++){
-		tail[i] = convolution_output[i];
-	}
-
-//    for (int i = 0; i < 16+filter_order; i++) { 
-//        printf("%.30f, \n", convolution_output[i]);
-//    };
-
+	for (int i = 0; i < 64; i++) 
+	{ 
+		printf("%.30f, \n", modulated_sum_imaginary[i]);
+	};
 }
  
 int load_files(float* modulated_array, int load_choice)
