@@ -75,10 +75,10 @@ int main(){
 	float convolution_output[16+filter_order];
 	float modulated_sum_segment[16];
 	float tail[40] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-	float modulated_sum_imaginary[100];
+	float modulated_sum_imaginary[320];
 	float modulated_sum_phase[16];
 
-	for(int j=0; j<5; j++)
+	for(int j=0; j<20; j++)
 	{
 		for(int i=0; i<16; i++){
 			modulated_sum_segment[i] = modulated_sum[(j*16)+i];
@@ -98,43 +98,31 @@ int main(){
 		for(int i=0; i<40; i++){
 			tail[i] = convolution_output[i+16];
 		}
+	}
+//	for (int i = 0; i < 64; i++) 
+//	{ 
+//		printf("%.30f, \n", modulated_sum_imaginary[i]);
+//	};
 
-	//    for (int i = 0; i < 16+filter_order; i++) { 
-	//        printf("%.30f, \n", convolution_output[i]);
-	//    };
-
-/*
-		for(int i=0; i<16; i++){
-			if (modulated_sum_segment[i]==0)
-			{
-				printf("REAL PART IS ZERO!!!!!!!!!!\n");
-				modulated_sum_phase[i] = 0;
-			}
-			else
-			{
-			modulated_sum_phase[i] = atan(modulated_sum_imaginary[i]/modulated_sum_segment[i]);
-			}
+	for(int i=0; i<320; i++){
+		if (modulated_sum[i]==0)
+		{
+			printf("REAL PART IS ZERO!!!!!!!!!!\n");
+			modulated_sum_phase[i] = 0;
 		}
+		else
+		{
+			modulated_sum_phase[i] = atan(modulated_sum_imaginary[i+20]/modulated_sum[i]);
+		}
+	}
 		
-		for (int i = 0; i<16; i++) { 
-			printf("%.30f,\n", modulated_sum_imaginary[i]);
-		};
-	printf("\n");	
-		for (int i = 0; i<16; i++) { 
-			printf("%.30f,\n", modulated_sum_segment[i]);
-		};
 	printf("\n");
-		for (int i = 0; i<16; i++) { 
+		for (int i = 0; i<320; i++) { 
+			if (i%16==0)
+			{printf("\n\n");}
 			printf("%.30f, \n", modulated_sum_phase[i]);
 		};
-		printf("\n");
-		printf("\n");
-		*/
-	}
-	for (int i = 0; i < 64; i++) 
-	{ 
-		printf("%.30f, \n", modulated_sum_imaginary[i]);
-	};
+
 }
  
 int load_files(float* modulated_array, int load_choice)
