@@ -80,10 +80,10 @@ int main(){
 
 	for(int j=0; j<5; j++)
 	{
-		for(int i=j*16; i<(j+1)*16; i++){
-			modulated_sum_segment[i] = modulated_sum[i];
+		for(int i=0; i<16; i++){
+			modulated_sum_segment[i] = modulated_sum[(j*16)+i];
 		}
-
+		
 		convolution(filter_order+1, 16, windowed_filter_coefficients,
 			modulated_sum_segment, convolution_output);	
 
@@ -91,12 +91,12 @@ int main(){
 			convolution_output[i] = convolution_output[i] + tail[i];
 		}
 
-		for(int i=j*16;i<(j+1)*16;i++){
-			modulated_sum_imaginary[i] = convolution_output[i];
+		for(int i=0; i<16; i++){
+			modulated_sum_imaginary[(j*16)+i] = convolution_output[i];
 		}
 
-		for(int i=16; i<56; i++){
-			tail[i] = convolution_output[i];
+		for(int i=0; i<40; i++){
+			tail[i] = convolution_output[i+16];
 		}
 
 	//    for (int i = 0; i < 16+filter_order; i++) { 
