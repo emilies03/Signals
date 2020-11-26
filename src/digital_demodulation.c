@@ -14,6 +14,8 @@ int phase_detection();
 int get_phase();
 const float beta = 4.54;
 const int filter_order = 40;
+const int original_signal_length = 98304016;
+
 
 
 int main(int argc, char *argv[])
