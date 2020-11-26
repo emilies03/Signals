@@ -15,6 +15,7 @@ int get_phase();
 const float beta = 4.54;
 const int filter_order = 40;
 
+
 int main(int argc, char *argv[]){
 	FILE *fin1, *fout;
 	float modulated_signal[2048];
