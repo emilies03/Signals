@@ -10,9 +10,10 @@ int hilbert_filter();
 int kaiser_window();
 int convolution();
 int block_convolution();
+int load_files();
+const float beta = 4.54;
 const int filter_order = 40;
 const int original_signal_length = 98304016;
-int load_files();
 
 float* modulated_diff;
 float* modulated_sum;
@@ -50,7 +51,7 @@ int main(){
 */
 	printf("Get Kaiser windowing coefficients\n");
 	float kaiser_filter_coefficients[filter_order+1];
-	kaiser_window(filter_order, kaiser_filter_coefficients);
+	kaiser_window(filter_order, kaiser_filter_coefficients, beta);
 
 /*	printf("Charlie coefficients\n");
 	for(int i=0; i<= filter_order; i++){
