@@ -99,10 +99,19 @@ int main(){
 			tail[i] = convolution_output[i+16];
 		}
 	}
-//	for (int i = 0; i < 64; i++) 
-//	{ 
-//		printf("%.30f, \n", modulated_sum_imaginary[i]);
-//	};
+
+	/*
+	for (int i = 0; i < 48; i++) 
+	{ 
+		printf("%.30f, \n", modulated_sum_imaginary[i+20]);
+	};
+
+	printf("\n\n\n");
+
+	for (int i = 0; i < 48; i++) 
+	{ 
+		printf("%.30f, \n", modulated_sum[i]);
+	}; */
 
 	for(int i=0; i<320; i++){
 		if (modulated_sum[i]==0)
@@ -112,7 +121,7 @@ int main(){
 		}
 		else
 		{
-			modulated_sum_phase[i] = atan(modulated_sum_imaginary[i+20]/modulated_sum[i]);
+			modulated_sum_phase[i] = atan2(modulated_sum_imaginary[i+20], modulated_sum[i]);
 		}
 	}
 		
