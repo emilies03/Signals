@@ -10,19 +10,14 @@ int kaiser_window(int filter_order, float kaiser_filter_coefficients[filter_orde
     // use kaiser window definition from MATLAB online rather than definition in handouts
 
     int i, n;
-    double x, single_coef;
+    double x;
 
     printf("finding kaiser window coefficients\n");
     float denominator = bessel(beta);
     for(i=0; i<=filter_order; i++){
         n = i - filter_order/2;
-        //x = beta * sqrt(1-((2*(double)n)/((double)filter_order -1)));
         x = beta * sqrt(1-pow((double)n/20,2));
         float numerator = bessel(x);
-        // for debugging:
-        // single_coef = numerator/denominator;
-        // printf("for i = %i\n", i);
-        // printf("single_coef = %f\n", single_coef);
         kaiser_filter_coefficients[i] = numerator/denominator;
     }
 
