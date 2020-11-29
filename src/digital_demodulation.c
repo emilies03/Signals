@@ -50,7 +50,6 @@ int main(int argc, char *argv[]){
 	};	
 
 	printf("Opening modulated signal\n");
-
 	fin1=fopen(argv[1],"rb");
 	if(fin1 == NULL) {
 		printf("ERROR: modulated signal does not exist\n");
@@ -80,7 +79,6 @@ int main(int argc, char *argv[]){
 					modulated_signal_segment[i+x*16] = modulated_signal_segment[i+(x+1)*16];
 				}
 				modulated_signal_segment[i+(required_blocks-1)*16] = modulated_signal[j*16+i];
-
 			} 
 
 			int bit = get_phase(filter_order, required_blocks, modulated_signal_segment, modulated_signal_imaginary, tail,
@@ -146,4 +144,5 @@ int main(int argc, char *argv[]){
 	fclose(fout);
 
 	exit(0);
+
 }
