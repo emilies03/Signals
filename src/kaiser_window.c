@@ -17,6 +17,7 @@ int kaiser_window(int filter_order, float kaiser_filter_coefficients[filter_orde
     for(i=0; i<=filter_order; i++){
         n = i - filter_order/2;
         x = beta * sqrt(1-pow((double)n/20,2));
+        float numerator = bessel(x);
         kaiser_filter_coefficients[i] = numerator/denominator;
     }
 
