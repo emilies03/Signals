@@ -6,17 +6,18 @@
 #include "hilbert_filter.c"
 #include "kaiser_window.c"
 #include "convolution.c"
+#include "xor.c"
 
 int hilbert_filter();
 int convolution();
 int block_convolution();
 int phase_detection();
 int get_phase();
+int load_prs();
 const float beta = 4.54;
 const int filter_order = 40;
 const int original_signal_length = 98304016;
-
-
+unsigned long long* prs_sum;
 
 int main(int argc, char *argv[])
 {
@@ -36,7 +37,16 @@ int main(int argc, char *argv[])
 	int prs_signal[128];
 	int previous_prs_signal[128];
 	int current_prs_signal[128];
+	prs_sum = (unsigned long long*) malloc(sizeof(unsigned long long int)*2);
 
+	printf("Loading prs_sum\n");
+	load_prs(prs_sum,1);
+	
+	printf("prs_sum is: \n"); 
+    for (int i = 0; i <= 1; ++i) { 
+        printf("%llu, \n", prs_sum[1-i]);
+    };
+	
 	printf("Get hilbert filter coefficients\n");
 	float hilbert_filter_coefficients[filter_order+1];
 	hilbert_filter(filter_order, hilbert_filter_coefficients);
@@ -53,8 +63,8 @@ int main(int argc, char *argv[])
 	};	
 
 	printf("Opening modulated signal\n");
-	fin1=fopen(argv[1],"rb");
 
+	fin1=fopen(argv[1],"rb");
 	if(fin1 == NULL) {
 		printf("ERROR: modulated signal does not exist\n");
 		exit(1);
@@ -111,19 +121,18 @@ int main(int argc, char *argv[])
 				}
 				// printf("%d,", prs_signal[k]);
 			}
-			
+
 		}
-		
 
 		// pass prs_signal to charlies function here!!!
-		
 		int bit = 1;
 		int total_bits_value = 0;
 		sample_bits[bit_count] = bit;
 		bit_count++;
 		if (bit_count > 7) 
 		{
-
+			printf("prs test\n");
+			xor(prs_sum[1],prs_sum[0]);
 
 			// convert to signed int
 			// is this the right sig bit first?
@@ -149,6 +158,43 @@ int main(int argc, char *argv[])
 	fclose(fin1);
 	fclose(fout);
 
-	exit(0);
+	exit(0);	
+	}
+
+}
+
+int load_prs(unsigned long long* modulated_array, int load_choice)
+{
+	FILE *fin2;
+	if(load_choice==1)
+	{
+		fin2=fopen("data/prs_sum.dat","rb");
+		printf("Opening prs_sum\n");
+		if(fin2 == NULL) {
+			printf("ERROR: prs_sum does not exist\n");
+			exit(1);
+		}
+		printf("Opened prs_sum successfully\n");
+	}
+	else
+	{
+		fin2=fopen("data/prs_diff.dat","rb");
+		printf("Opening prs_diff\n");
+		if(fin2 == NULL) {
+			printf("ERROR: prs_diff does not exist\n");
+			exit(1);
+		}
+		printf("Opened prs_diff successfully\n");
+	}
+	
+	// reading 98304016 floats in file
+	fread(modulated_array, sizeof(unsigned long long int), 2, fin2);
+
+	printf("prs signal loading complete\n");
+
+	// close the files
+	fclose(fin2);
+
+	return 1;
 
 }
