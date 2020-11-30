@@ -16,7 +16,8 @@ const float beta = 4.54;
 const int filter_order = 40;
 
 
-int main(int argc, char *argv[]){
+int main(int argc, char *argv[])
+{
 	FILE *fin1, *fout;
 	float modulated_signal[2048];
 	int bit_count = 0;
@@ -51,6 +52,7 @@ int main(int argc, char *argv[]){
 
 	printf("Opening modulated signal\n");
 	fin1=fopen(argv[1],"rb");
+
 	if(fin1 == NULL) {
 		printf("ERROR: modulated signal does not exist\n");
 		exit(1);
@@ -70,7 +72,9 @@ int main(int argc, char *argv[]){
 	while(fread(modulated_signal, sizeof(float), 2048, fin1))
 	{	
 		for (int j=0; j<128; j++)
+
 		{
+			
 			for(int i=0;i<16;i++)
 			{
 				previous_imaginary_block[i] = modulated_signal_imaginary[i];
