@@ -32,13 +32,13 @@ return 1;
 }
 
 
-int block_convolution(float modulated_sum_segment[16], float windowed_filter_coefficients[41], 
-    float tail[40], float modulated_sum_imaginary[16], int filter_order)
+int block_convolution(int filter_order, float modulated_sum_segment[16], float windowed_filter_coefficients[filter_order+1], 
+    float tail[filter_order], float modulated_sum_imaginary[16])
 {
-    float convolution_output[56];
+    float convolution_output[filter_order+16];
     convolution(filter_order+1, 16, windowed_filter_coefficients, modulated_sum_segment, convolution_output);
 
-    for(int i=0; i<40; i++){
+    for(int i=0; i<filter_order; i++){
 			convolution_output[i] = convolution_output[i] + tail[i];
 		}
 
@@ -46,7 +46,7 @@ int block_convolution(float modulated_sum_segment[16], float windowed_filter_coe
 			modulated_sum_imaginary[i] = convolution_output[i];
 		} 
 
-    for(int i=0; i<40; i++){
+    for(int i=0; i<filter_order; i++){
 			tail[i] = convolution_output[i+16];
 		}
     
@@ -70,24 +70,28 @@ int phase_detection(float modulated_sum_phase[16], float previous_phase[16])
 }
 
 
-int get_phase(int required_blocks, float modulated_sum_segment[required_blocks*16], float next_modulated_sum_segment[16],
-	float modulated_sum_imaginary[16], float tail[40],
+int get_phase(int filter_order, int required_blocks, float modulated_sum_segment[required_blocks*16],
+	float modulated_sum_imaginary[16], float tail[filter_order],
 	float modulated_sum_phase[16],
-	float previous_imaginary_block[16], float previous_phase[16], int iterations, float windowed_filter_coefficients[41],
-    int filter_order)
+	float previous_imaginary_block[16], float previous_phase[16], int iterations, float windowed_filter_coefficients[filter_order+1])
 {   
+		float next_modulated_sum_segment[16];
+		for(int i=0; i<16; i++){
+			next_modulated_sum_segment[i] = modulated_sum_segment[i+(required_blocks-1)*16];
+		}
 
-		block_convolution(next_modulated_sum_segment, windowed_filter_coefficients, tail, modulated_sum_imaginary, 
-		filter_order);
+		int imaginary_split = (filter_order/2)%16;
+
+		block_convolution(filter_order, next_modulated_sum_segment, windowed_filter_coefficients, tail, modulated_sum_imaginary);
 
 
-		if(iterations>2){
+		if(iterations>required_blocks-1){
 			for(int i=0;i<16;i++){
 			previous_phase[i] = modulated_sum_phase[i];
 			} 
 		}
 
-		if(iterations > 1){
+		if(iterations > required_blocks-2){
 			for(int i = 0; i<16; i++){
 				if (modulated_sum_segment[i]==0)
 				{
@@ -96,11 +100,11 @@ int get_phase(int required_blocks, float modulated_sum_segment[required_blocks*1
 				}
 				else
 				{
-					for(int x=0; x<12; x++){
-						modulated_sum_phase[x] = atan2(previous_imaginary_block[x+4], modulated_sum_segment[x]);
+					for(int x=0; x<16-imaginary_split; x++){
+						modulated_sum_phase[x] = atan2(previous_imaginary_block[x+imaginary_split], modulated_sum_segment[x]);
 					}
-					for(int x=12; x<16; x++){
-						modulated_sum_phase[x] = atan2(modulated_sum_imaginary[x-12], modulated_sum_segment[x]);
+					for(int x=16-imaginary_split; x<16; x++){
+						modulated_sum_phase[x] = atan2(modulated_sum_imaginary[x-(16-imaginary_split)], modulated_sum_segment[x]);
 					}
 				}
 				
@@ -116,7 +120,7 @@ int get_phase(int required_blocks, float modulated_sum_segment[required_blocks*1
 				
 		}
 		
-		if(iterations > 2){
+		if(iterations > required_blocks-1){
 			phase_detection(modulated_sum_phase, previous_phase);
 		}
 

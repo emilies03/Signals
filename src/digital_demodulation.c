@@ -42,6 +42,7 @@ int main(int argc, char *argv[]){
 		printf("ERROR: modulated signal does not exist\n");
 		exit(1);
 	}
+
 	printf("Opened modulated signal successfully\n");	
 
 	printf("Opening output file\n");	
@@ -49,44 +50,42 @@ int main(int argc, char *argv[]){
 	if(fout == NULL) {
 		printf("ERROR: output file cannot be created\n");
 		exit(1);
+
 	}
 	printf("Opened output file successfully\n");	
 
 	while(fread(modulated_signal, sizeof(float), 2048, fin1))
 	{
 
-		int required_blocks = ceil( ((filter_order/2)+16)/16 );
-		float next_modulated_signal_segment[16] = {0};
+		float elements = (filter_order/2)+16;
+		int required_blocks = ceil( elements/16 );
 		float modulated_signal_segment[required_blocks*16] = {0};
 
 		float modulated_signal_block[16] = {0};
 		float modulated_signal_imaginary[16] = {0};
-		float tail[40] = {0};
+		float tail[filter_order] = {0};
 		float modulated_signal_phase[16] = {0};
 		float previous_imaginary_block[16] = {0};
 		float previous_phase[16] = {0};
 		int iterations = 0;
 		int result;
 		int prs_signal[128];
-
-		for(int j=0; j<128; j++)
+		
+		for (int j=0; j<128; j++)
 		{
-
-			
 			for(int i=0;i<16;i++)
 			{
 				previous_imaginary_block[i] = modulated_signal_imaginary[i];
-				modulated_signal_segment[i] = modulated_signal_segment[i+16];
-				modulated_signal_segment[i+16] = next_modulated_signal_segment[i];
+				for(int x=0; x<required_blocks-1; x++)
+				{
+					modulated_signal_segment[i+x*16] = modulated_signal_segment[i+(x+1)*16];
+				}
+				modulated_signal_segment[i+(required_blocks-1)*16] = modulated_signal[j*16+i];
 
-				//this line should be replaced with the new input
-				modulated_signal_block[i] = modulated_signal[j*16+i];
 			} 
 
-
-			get_phase(required_blocks, modulated_signal_segment, next_modulated_signal_segment, modulated_signal_imaginary, tail,
-						modulated_signal_phase, previous_imaginary_block, previous_phase, iterations, windowed_filter_coefficients,
-						filter_order);
+			get_phase(filter_order, required_blocks, modulated_signal_segment, modulated_signal_imaginary, tail,
+				modulated_signal_phase, previous_imaginary_block, previous_phase, iterations, windowed_filter_coefficients);
 			iterations += 1;	
 		
 		}
