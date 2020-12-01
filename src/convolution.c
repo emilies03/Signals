@@ -70,19 +70,14 @@ int phase_detection(float modulated_sum_phase[16], float previous_phase[16])
 }
 
 
-int get_phase(float modulated_sum_segment[16], float modulated_sum_imaginary[16], float tail[40],
-	float modulated_sum_phase[16], float first_real_block[16], float second_real_block[16],
+int get_phase(int required_blocks, float modulated_sum_segment[required_blocks*16], float next_modulated_sum_segment[16],
+	float modulated_sum_imaginary[16], float tail[40],
+	float modulated_sum_phase[16],
 	float previous_imaginary_block[16], float previous_phase[16], int iterations, float windowed_filter_coefficients[41],
     int filter_order)
 {   
 
-    for(int i=0;i<16;i++){
-			previous_imaginary_block[i] = modulated_sum_imaginary[i];
-			first_real_block[i] = second_real_block[i];
-			second_real_block[i] = modulated_sum_segment[i];
-		} 
-
-		block_convolution(modulated_sum_segment, windowed_filter_coefficients, tail, modulated_sum_imaginary, 
+		block_convolution(next_modulated_sum_segment, windowed_filter_coefficients, tail, modulated_sum_imaginary, 
 		filter_order);
 
 
@@ -102,10 +97,10 @@ int get_phase(float modulated_sum_segment[16], float modulated_sum_imaginary[16]
 				else
 				{
 					for(int x=0; x<12; x++){
-						modulated_sum_phase[x] = atan2(previous_imaginary_block[x+4], first_real_block[x]);
+						modulated_sum_phase[x] = atan2(previous_imaginary_block[x+4], modulated_sum_segment[x]);
 					}
 					for(int x=12; x<16; x++){
-						modulated_sum_phase[x] = atan2(modulated_sum_imaginary[x-12], first_real_block[x]);
+						modulated_sum_phase[x] = atan2(modulated_sum_imaginary[x-12], modulated_sum_segment[x]);
 					}
 				}
 				
