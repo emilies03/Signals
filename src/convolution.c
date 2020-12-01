@@ -58,7 +58,8 @@ int phase_detection(float modulated_sum_phase[16], float previous_phase[16])
 {   
     float difference = 0;
     for(int i=0; i<16; i++){
-        difference += fabs(modulated_sum_phase[0]-previous_phase[0]);
+        difference += fabs(modulated_sum_phase[i]-previous_phase[i]);
+        //printf("%.30f\n", difference);
     }
 
 	if(difference < (8*M_PI)){
@@ -109,19 +110,20 @@ int get_phase(int filter_order, int required_blocks, float modulated_sum_segment
 				}
 				
 			}
-
-			/*
-			for (int x = 0; x < 16; x++) 
-			{ 
-				printf("%.30f, %.30f\n", previous_phase[x], modulated_sum_phase[x]);
-			}; 
-			printf("\n\n");
-			*/
+			
 				
 		}
 		
 		if(iterations > required_blocks-1){
 			phase_detection(modulated_sum_phase, previous_phase);
+
+            /*
+             for (int x = 0; x < 16; x++) 
+			{ 
+				printf("%.30f, %.30f\n", previous_phase[x], modulated_sum_phase[x]);
+			}; 
+			printf("\n\n");
+            */
 		}
 
         return 1;
