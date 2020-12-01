@@ -10,6 +10,7 @@ int hilbert_filter();
 int convolution();
 int block_convolution();
 int phase_detection();
+int get_phase();
 const float beta = 4.54;
 const int filter_order = 40;
 
@@ -78,47 +79,13 @@ int main(int argc, char *argv[]){
 				modulated_signal_block[i] = modulated_signal[j*16+i];
 			} 
 
-			block_convolution(modulated_signal_block, windowed_filter_coefficients, tail, 
-				modulated_signal_imaginary, filter_order);
 
-			iterations++;
+			get_phase(modulated_sum_segment, modulated_sum_imaginary, tail,
+				modulated_sum_phase, first_real_block, second_real_block, 
+				previous_imaginary_block, previous_phase, iterations, windowed_filter_coefficients,
+				filter_order);
 
-			if(iterations>3)
-			{
-				for(int i=0;i<16;i++)
-				{
-				previous_phase[i] = modulated_sum_phase[i];
-				} 
-			}
-
-			if(iterations > 2)
-			{
-				for(int i = 0; i<16; i++)
-				{
-					if (modulated_signal[i]==0)
-					{
-						modulated_sum_phase[i] = 0;
-					}
-					else
-					{
-						for(int x=0; x<12; x++)
-						{
-							modulated_sum_phase[x] = atan2(previous_imaginary_block[x+4], first_real_block[x]);
-						}
-						for(int x=12; x<16; x++)
-						{
-							modulated_sum_phase[x] = atan2(modulated_signal_imaginary[x-12], first_real_block[x]);
-						}
-					}
-					
-				}
-					
-			}
-			
-			if(iterations > 3)
-			{
-				prs_signal[j] = phase_detection(modulated_sum_phase, previous_phase);
-			}
+			iterations += 1;	
 		
 		}
 
@@ -130,6 +97,7 @@ int main(int argc, char *argv[]){
 		bit_count++;
 		if (bit_count > 7) 
 		{
+
 
 			// convert to signed int
 			// is this the right sig bit first?
