@@ -9,6 +9,7 @@
 int hilbert_filter();
 int convolution();
 int block_convolution();
+int phase_detection();
 const float beta = 4.54;
 const int filter_order = 40;
 
@@ -113,23 +114,13 @@ int main(int argc, char *argv[]){
 				}
 					
 			}
-			// Cam's new function here:
-
+			
 			if(iterations > 3)
 			{
-				float difference = modulated_sum_phase[0]-previous_phase[0];
-				if(difference > -0.5 && difference<0.5)
-				{
-					result = 0;
-				}
-				if(difference>=0.5 || difference<=-0.5)
-				{
-					result = 1;
-				}
+				prs_signal[j] = phase_detection(modulated_sum_phase, previous_phase);
 			}
-			prs_signal[j] = result;
 		
-		}	
+		}
 
 		// pass prs_signal to charlies function here!!!
 		

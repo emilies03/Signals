@@ -52,3 +52,20 @@ int block_convolution(float modulated_sum_segment[16], float windowed_filter_coe
     
     return 1;
 }
+
+
+int phase_detection(float modulated_sum_phase[16], float previous_phase[16])
+{   
+    float difference = 0;
+    for(int i=0; i<16; i++){
+        difference += fabs(modulated_sum_phase[0]-previous_phase[0]);
+    }
+
+	if(difference < (8*M_PI)){
+		return 0;
+	}
+	if(difference >= (8*M_PI)){
+		 return 1;
+	}
+   
+}
