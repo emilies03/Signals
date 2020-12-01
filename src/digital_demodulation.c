@@ -54,12 +54,15 @@ int main(int argc, char *argv[]){
 
 	while(fread(modulated_signal, sizeof(float), 2048, fin1))
 	{
+
+		int required_blocks = ceil( ((filter_order/2)+16)/16 );
+		float next_modulated_signal_segment[16] = {0};
+		float modulated_signal_segment[required_blocks*16] = {0};
+
 		float modulated_signal_block[16] = {0};
 		float modulated_signal_imaginary[16] = {0};
 		float tail[40] = {0};
-		float modulated_sum_phase[16] = {0};
-		float first_real_block[16] = {0};
-		float second_real_block[16] = {0};
+		float modulated_signal_phase[16] = {0};
 		float previous_imaginary_block[16] = {0};
 		float previous_phase[16] = {0};
 		int iterations = 0;
@@ -68,23 +71,22 @@ int main(int argc, char *argv[]){
 
 		for(int j=0; j<128; j++)
 		{
+
 			
 			for(int i=0;i<16;i++)
 			{
 				previous_imaginary_block[i] = modulated_signal_imaginary[i];
-				first_real_block[i] = second_real_block[i];
-				second_real_block[i] = modulated_signal_block[i];
+				modulated_signal_segment[i] = modulated_signal_segment[i+16];
+				modulated_signal_segment[i+16] = next_modulated_signal_segment[i];
 
 				//this line should be replaced with the new input
 				modulated_signal_block[i] = modulated_signal[j*16+i];
 			} 
 
 
-			get_phase(modulated_sum_segment, modulated_sum_imaginary, tail,
-				modulated_sum_phase, first_real_block, second_real_block, 
-				previous_imaginary_block, previous_phase, iterations, windowed_filter_coefficients,
-				filter_order);
-
+			get_phase(required_blocks, modulated_signal_segment, next_modulated_signal_segment, modulated_signal_imaginary, tail,
+						modulated_signal_phase, previous_imaginary_block, previous_phase, iterations, windowed_filter_coefficients,
+						filter_order);
 			iterations += 1;	
 		
 		}
