@@ -2,6 +2,7 @@
 #include<stdlib.h>
 #include<stdint.h>
 #include<math.h>
+#include <stdbool.h>
 #include "hilbert_filter.c"
 #include "kaiser_window.c"
 #include "convolution.c"
@@ -19,6 +20,18 @@ int main(int argc, char *argv[]){
 	float modulated_signal[2048];
 	int bit_count = 0;
 	int sample_bits[8];
+	float elements = (filter_order/2)+16;
+	int required_blocks = ceil( elements/16 );
+	float modulated_signal_segment[required_blocks*16];
+	float modulated_signal_imaginary[16] = {0};
+	float tail[filter_order];
+	float modulated_signal_phase[16] = {0};
+	float previous_imaginary_block[16] = {0};
+	float previous_phase[16] = {0};
+	int iterations = 0;
+	int prs_signal[128];
+	int previous_prs_signal[128];
+	int current_prs_signal[128];
 
 	printf("Get hilbert filter coefficients\n");
 	float hilbert_filter_coefficients[filter_order+1];
@@ -55,22 +68,7 @@ int main(int argc, char *argv[]){
 	printf("Opened output file successfully\n");	
 
 	while(fread(modulated_signal, sizeof(float), 2048, fin1))
-	{
-
-		float elements = (filter_order/2)+16;
-		int required_blocks = ceil( elements/16 );
-		float modulated_signal_segment[required_blocks*16] = {0};
-
-		float modulated_signal_block[16] = {0};
-		float modulated_signal_imaginary[16] = {0};
-		float tail[filter_order] = {0};
-		float modulated_signal_phase[16] = {0};
-		float previous_imaginary_block[16] = {0};
-		float previous_phase[16] = {0};
-		int iterations = 0;
-		int result;
-		int prs_signal[128];
-		
+	{	
 		for (int j=0; j<128; j++)
 		{
 			for(int i=0;i<16;i++)
@@ -84,11 +82,33 @@ int main(int argc, char *argv[]){
 
 			} 
 
-			get_phase(filter_order, required_blocks, modulated_signal_segment, modulated_signal_imaginary, tail,
-				modulated_signal_phase, previous_imaginary_block, previous_phase, iterations, windowed_filter_coefficients);
-			iterations += 1;	
-		
+			int bit = get_phase(filter_order, required_blocks, modulated_signal_segment, modulated_signal_imaginary, tail,
+				modulated_signal_phase, previous_imaginary_block, previous_phase, iterations, windowed_filter_coefficients);	
+			
+
+			previous_prs_signal[j] = current_prs_signal[j];
+			current_prs_signal[j] = bit;
+			
+			iterations += 1;
 		}
+
+		if(iterations>128)
+		{
+			for (int k=0; k<128; k++)
+			{
+				if (k<125)
+				{
+					prs_signal[k] = previous_prs_signal[k+3];
+				}
+				else
+				{
+					prs_signal[k] = current_prs_signal[k-125];
+				}
+				printf("%d,", prs_signal[k]);
+			}
+			
+		}
+		
 
 		// pass prs_signal to charlies function here!!!
 		
