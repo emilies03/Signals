@@ -13,8 +13,10 @@ const float beta = 4.54;
 const int filter_order = 40;
 
 int main(int argc, char *argv[]){
-	FILE *fin1;
+	FILE *fin1, *fout;
 	float modulated_signal[2048];
+	int bit_count = 0;
+	int sample_bits[8];
 
 	printf("Get hilbert filter coefficients\n");
 	float hilbert_filter_coefficients[filter_order+1];
@@ -39,6 +41,14 @@ int main(int argc, char *argv[]){
 		exit(1);
 	}
 	printf("Opened modulated signal successfully\n");	
+
+	printf("Opening output file\n");	
+	fout=fopen("data/Output","w+b");
+	if(fout == NULL) {
+		printf("ERROR: output file cannot be created\n");
+		exit(1);
+	}
+	printf("Opened output file successfully\n");	
 
 	while(fread(modulated_signal, sizeof(float), 2048, fin1))
 	{
@@ -117,19 +127,42 @@ int main(int argc, char *argv[]){
 					result = 1;
 				}
 			}
-			printf("%d, ", result);
 			prs_signal[j] = result;
 		
 		}	
 
 		// pass prs_signal to charlies function here!!!
+		
+		int bit = 1;
+		int total_bits_value = 0;
+		sample_bits[bit_count] = bit;
+		bit_count++;
+		if (bit_count > 7) 
+		{
 
-		// charlies prs function adds result here, now know how to do this #thanksjack
+			// convert to signed int
+			// is this the right sig bit first?
+			for (int i=0; i<7; i++)
+			{
+				total_bits_value = total_bits_value +(sample_bits[i]*pow(2,i));
+			}
+			if (sample_bits[7]==1)
+			{
+				total_bits_value = -total_bits_value;
+			}
+			bit_count =0;
 
-		// down sample/up sample
+		/////////////// !!!!!!!!!! UPSAMPLE/DOWNSAMPLE !!!!!!!!!!
 
-		// save to output
+			// write to file
+			total_bits_value = (signed char)total_bits_value;
+			fwrite(&total_bits_value, sizeof(signed char), 1, fout);
+		}
 	
 	}
 
+	fclose(fin1);
+	fclose(fout);
+
+	exit(0);
 }
