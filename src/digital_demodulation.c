@@ -17,7 +17,8 @@ int load_prs();
 const float beta = 4.54;
 const int filter_order = 40;
 const int original_signal_length = 98304016;
-unsigned long long* prs_sum;
+int64_t * prs_sum;
+int xored_output;
 
 int main(int argc, char *argv[])
 {
@@ -37,7 +38,8 @@ int main(int argc, char *argv[])
 	int prs_signal[128];
 	int previous_prs_signal[128];
 	int current_prs_signal[128];
-	prs_sum = (unsigned long long*) malloc(sizeof(unsigned long long int)*2);
+	prs_sum = (int64_t *) malloc(sizeof(int64_t)*2);
+	int total_bits_value = 0;
 
 	printf("Loading prs_sum\n");
 	load_prs(prs_sum,1);
@@ -121,19 +123,21 @@ int main(int argc, char *argv[])
 				}
 				// printf("%d,", prs_signal[k]);
 			}
-
 		}
-
+	
+		// int prs_signal_test[128] = {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 1, 0, 0, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 		// pass prs_signal to charlies function here!!!
-		int bit = 1;
-		int total_bits_value = 0;
-		sample_bits[bit_count] = bit;
+		// printf("\nprs sum[1]%llu\n",prs_sum[1]);
+		// printf("prs sum[0]%llu\n",prs_sum[0]);
+		xored_output = xor(prs_sum[1],prs_sum[0],prs_signal);
+		
+		// printf("\n\n final bit = %i\n", xored_output);
+
+
+		sample_bits[bit_count] = xored_output;
 		bit_count++;
 		if (bit_count > 7) 
 		{
-			printf("prs test\n");
-			xor(prs_sum[1],prs_sum[0]);
-
 			// convert to signed int
 			// is this the right sig bit first?
 			for (int i=0; i<7; i++)
@@ -159,11 +163,10 @@ int main(int argc, char *argv[])
 	fclose(fout);
 
 	exit(0);	
-	}
 
 }
 
-int load_prs(unsigned long long* modulated_array, int load_choice)
+int load_prs(int64_t * modulated_array, int load_choice)
 {
 	FILE *fin2;
 	if(load_choice==1)
@@ -188,7 +191,7 @@ int load_prs(unsigned long long* modulated_array, int load_choice)
 	}
 	
 	// reading 98304016 floats in file
-	fread(modulated_array, sizeof(unsigned long long int), 2, fin2);
+	fread(modulated_array, sizeof(unsigned long int), 2, fin2);
 
 	printf("prs signal loading complete\n");
 
