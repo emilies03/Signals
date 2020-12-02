@@ -84,7 +84,7 @@ int get_phase(int filter_order, int required_blocks, float modulated_signal_segm
 
 		int imaginary_split = (filter_order/2)%16;
 
-		block_convolution(filter_order, next_modulated_signal_segment, windowed_filter_coefficients, tail, modulated_sum_imaginary);
+		block_convolution(filter_order, next_modulated_signal_segment, windowed_filter_coefficients, tail, modulated_signal_imaginary);
 
 
 		if(iterations>required_blocks-1){
