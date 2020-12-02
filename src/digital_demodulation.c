@@ -96,15 +96,15 @@ int main(int argc, char *argv[]){
 		{
 			for (int k=0; k<128; k++)
 			{
-				if (k<125)
+				if (k<128-required_blocks)
 				{
-					prs_signal[k] = previous_prs_signal[k+3];
+					prs_signal[k] = previous_prs_signal[k+required_blocks];
 				}
 				else
 				{
-					prs_signal[k] = current_prs_signal[k-125];
+					prs_signal[k] = current_prs_signal[k-(128-required_blocks)];
 				}
-				printf("%d,", prs_signal[k]);
+				// printf("%d,", prs_signal[k]);
 			}
 			
 		}
