@@ -123,38 +123,39 @@ int main(int argc, char *argv[])
 				}
 				// printf("%d,", prs_signal[k]);
 			}
-		}
-	
-		// int prs_signal_test[128] = {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 1, 0, 0, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
-		// pass prs_signal to charlies function here!!!
-		// printf("\nprs sum[1]%llu\n",prs_sum[1]);
-		// printf("prs sum[0]%llu\n",prs_sum[0]);
-		xored_output = xor(prs_sum[1],prs_sum[0],prs_signal);
 		
-		// printf("\n\n final bit = %i\n", xored_output);
+	
+			// int prs_signal_test[128] = {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 1, 0, 0, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+			// pass prs_signal to charlies function here!!!
+			// printf("\nprs sum[1]%llu\n",prs_sum[1]);
+			// printf("prs sum[0]%llu\n",prs_sum[0]);
+			xored_output = xor(prs_sum[1],prs_sum[0],prs_signal);
+			
+			// printf("\n\n final bit = %i\n", xored_output);
 
 
-		sample_bits[bit_count] = xored_output;
-		bit_count++;
-		if (bit_count > 7) 
-		{
-			// convert to signed int
-			// is this the right sig bit first?
-			for (int i=0; i<7; i++)
+			sample_bits[bit_count] = xored_output;
+			bit_count++;
+			if (bit_count > 7) 
 			{
-				total_bits_value = total_bits_value +(sample_bits[i]*pow(2,i));
-			}
-			if (sample_bits[7]==1)
-			{
-				total_bits_value = -total_bits_value;
-			}
-			bit_count =0;
+				// convert to signed int
+				// is this the right sig bit first?
+				for (int i=0; i<7; i++)
+				{
+					total_bits_value = total_bits_value +(sample_bits[i]*pow(2,i));
+				}
+				if (sample_bits[7]==1)
+				{
+					total_bits_value = -total_bits_value;
+				}
+				bit_count =0;
 
-		/////////////// !!!!!!!!!! UPSAMPLE/DOWNSAMPLE !!!!!!!!!!
+			/////////////// !!!!!!!!!! UPSAMPLE/DOWNSAMPLE !!!!!!!!!!
 
-			// write to file
-			total_bits_value = (signed char)total_bits_value;
-			fwrite(&total_bits_value, sizeof(signed char), 1, fout);
+				// write to file
+				total_bits_value = (signed char)total_bits_value;
+				fwrite(&total_bits_value, sizeof(signed char), 1, fout);
+			}
 		}
 	
 	}
