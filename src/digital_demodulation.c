@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
 	int previous_prs_signal[128];
 	int current_prs_signal[128];
 	prs_sum = (int64_t *) malloc(sizeof(int64_t)*2);
-	int total_bits_value = 0;
+	signed total_bits_value = 0;
 
 	printf("Loading prs_sum\n");
 	load_prs(prs_sum,1);
@@ -121,9 +121,9 @@ int main(int argc, char *argv[])
 				{
 					prs_signal[k] = current_prs_signal[k-(128-required_blocks)];
 				}
-				// printf("%d,", prs_signal[k]);
+				 printf("%d,", prs_signal[k]);
 			}
-		
+		printf("\n");
 	
 			// int prs_signal_test[128] = {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 1, 0, 0, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 			// pass prs_signal to charlies function here!!!
@@ -138,23 +138,27 @@ int main(int argc, char *argv[])
 			bit_count++;
 			if (bit_count > 7) 
 			{
+				// printf("____________________");
 				// convert to signed int
-				// is this the right sig bit first?
-				for (int i=0; i<7; i++)
+				// is this the right sig bit first? yes i think so!
+				for (int i=1; i<8; i++)
 				{
-					total_bits_value = total_bits_value +(sample_bits[i]*pow(2,i));
+					total_bits_value = total_bits_value +(sample_bits[i]*pow(2,(7-i)));
 				}
-				if (sample_bits[7]==1)
+				if (sample_bits[0]==1)
 				{
-					total_bits_value = -total_bits_value;
+					total_bits_value = -1*total_bits_value;
 				}
 				bit_count =0;
 
 			/////////////// !!!!!!!!!! UPSAMPLE/DOWNSAMPLE !!!!!!!!!!
-
+				// printf("pre: %i",total_bits_value);
 				// write to file
 				total_bits_value = (signed char)total_bits_value;
 				fwrite(&total_bits_value, sizeof(signed char), 1, fout);
+				// printf("	post: %c\n",total_bits_value);
+				total_bits_value = (signed)total_bits_value;
+				total_bits_value = 0;
 			}
 		}
 	
