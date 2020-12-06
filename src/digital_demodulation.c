@@ -17,7 +17,7 @@ int load_prs();
 const float beta = 4.54;
 const int filter_order = 40;
 const int original_signal_length = 98304016;
-int64_t * prs_sum;
+uint64_t * prs_sum;
 int xored_output;
 
 int main(int argc, char *argv[])
@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 	int prs_signal[128];
 	int previous_prs_signal[128];
 	int current_prs_signal[128];
-	prs_sum = (int64_t *) malloc(sizeof(int64_t)*2);
+	prs_sum = (uint64_t *) malloc(sizeof(uint64_t)*2);
 	signed total_bits_value = 0;
 
 	printf("Loading prs_sum\n");
@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 	
 	printf("prs_sum is: \n"); 
     for (int i = 0; i <= 1; ++i) { 
-        printf("%llu, \n", prs_sum[1-i]);
+        printf("%lu, \n", prs_sum[1-i]);
     };
 	
 	printf("Get hilbert filter coefficients\n");
@@ -86,9 +86,7 @@ int main(int argc, char *argv[])
 	while(fread(modulated_signal, sizeof(float), 2048, fin1))
 	{	
 		for (int j=0; j<128; j++)
-
-		{
-			
+		{			
 			for(int i=0;i<16;i++)
 			{
 				previous_imaginary_block[i] = modulated_signal_imaginary[i];
@@ -113,7 +111,7 @@ int main(int argc, char *argv[])
 		{
 			for (int k=0; k<128; k++)
 			{
-				if (k<128-required_blocks)
+				if (k < 128-required_blocks)
 				{
 					prs_signal[k] = previous_prs_signal[k+required_blocks];
 				}
@@ -121,42 +119,58 @@ int main(int argc, char *argv[])
 				{
 					prs_signal[k] = current_prs_signal[k-(128-required_blocks)];
 				}
-				 printf("%d,", prs_signal[k]);
 			}
-		printf("\n");
 	
-			// int prs_signal_test[128] = {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 1, 0, 0, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
-			// pass prs_signal to charlies function here!!!
-			// printf("\nprs sum[1]%llu\n",prs_sum[1]);
-			// printf("prs sum[0]%llu\n",prs_sum[0]);
 			xored_output = xor(prs_sum[1],prs_sum[0],prs_signal);
 			
-			// printf("\n\n final bit = %i\n", xored_output);
-
-
 			sample_bits[bit_count] = xored_output;
 			bit_count++;
+			total_bits_value = 0;
+			uint8_t decimal = 0;
 			if (bit_count > 7) 
-			{
-				// printf("____________________");
-				// convert to signed int
-				// is this the right sig bit first? yes i think so!
-				for (int i=1; i<8; i++)
-				{
-					total_bits_value = total_bits_value +(sample_bits[i]*pow(2,(7-i)));
-				}
+			{	
 				if (sample_bits[0]==1)
 				{
-					total_bits_value = -1*total_bits_value;
+					int inversed_bits[8] ={0};
+					for (int i=1; i<8; i++)
+					{
+						decimal = decimal +(sample_bits[i]*pow(2,(7-i)));
+					}
+					decimal -= 1;
+					for (int i=0; i<7; i++)
+					{
+						if (decimal!=0)
+						{
+							inversed_bits[7-i] = (decimal-1)%2;
+							decimal = decimal/2;
+						}
+						else
+						{
+							inversed_bits[7-i]=1;
+						}
+						 
+					}
+					for (int i=1; i<8; i++)
+					{
+						total_bits_value = total_bits_value +(inversed_bits[i]*pow(2,(7-i)));
+					}
+					total_bits_value = -total_bits_value;
 				}
+				else
+				{
+					for (int i=1; i<8; i++)
+					{
+						total_bits_value = total_bits_value +(sample_bits[i]*pow(2,(7-i)));
+					}
+				}
+								
 				bit_count =0;
 
 			/////////////// !!!!!!!!!! UPSAMPLE/DOWNSAMPLE !!!!!!!!!!
-				// printf("pre: %i",total_bits_value);
 				// write to file
 				total_bits_value = (signed char)total_bits_value;
+
 				fwrite(&total_bits_value, sizeof(signed char), 1, fout);
-				// printf("	post: %c\n",total_bits_value);
 				total_bits_value = (signed)total_bits_value;
 				total_bits_value = 0;
 			}
@@ -171,32 +185,19 @@ int main(int argc, char *argv[])
 
 }
 
-int load_prs(int64_t * modulated_array, int load_choice)
+int load_prs(uint64_t * modulated_array, int load_choice)
 {
 	FILE *fin2;
-	if(load_choice==1)
-	{
-		fin2=fopen("data/prs_sum.dat","rb");
-		printf("Opening prs_sum\n");
-		if(fin2 == NULL) {
-			printf("ERROR: prs_sum does not exist\n");
-			exit(1);
-		}
-		printf("Opened prs_sum successfully\n");
+	fin2=fopen("data/prs_sum.dat","rb");
+	printf("Opening prs_sum\n");
+	if(fin2 == NULL) {
+		printf("ERROR: prs_sum does not exist\n");
+		exit(1);
 	}
-	else
-	{
-		fin2=fopen("data/prs_diff.dat","rb");
-		printf("Opening prs_diff\n");
-		if(fin2 == NULL) {
-			printf("ERROR: prs_diff does not exist\n");
-			exit(1);
-		}
-		printf("Opened prs_diff successfully\n");
-	}
+	printf("Opened prs_sum successfully\n");
 	
 	// reading 98304016 floats in file
-	fread(modulated_array, sizeof(unsigned long int), 2, fin2);
+	fread(modulated_array, sizeof(uint64_t), 2, fin2);
 
 	printf("prs signal loading complete\n");
 
@@ -204,5 +205,4 @@ int load_prs(int64_t * modulated_array, int load_choice)
 	fclose(fin2);
 
 	return 1;
-
 }

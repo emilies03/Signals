@@ -21,13 +21,6 @@ int convolution(int length_signal_1, int length_signal_2, float signal_1[length_
         output[i] = sum;
     }
 
-/*
-    printf("convolution: \n"); 
-    for (int i = 0; i < length_signal_1+length_signal_2-1; ++i) { 
-        printf("%f, \n", convolution[i]);
-    };
-*/
-
 return 1;
 }
 
@@ -57,11 +50,10 @@ int block_convolution(int filter_order, float modulated_signal_segment[16], floa
 int phase_detection(float modulated_signal_phase[16], float previous_phase[16])
 {   
     float difference = 0;
+
     for(int i=0; i<16; i++){
         difference += fabs(modulated_signal_phase[i]-previous_phase[i]);
-        //printf("%.30f\n", difference);
     }
-
 	if(difference < (8*M_PI)){
 		return 0;
 	}
