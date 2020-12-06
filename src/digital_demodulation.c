@@ -17,12 +17,12 @@ int load_prs();
 const float beta = 4.54;
 const int filter_order = 40;
 const int original_signal_length = 98304016;
-uint64_t * prs_sum;
+uint64_t * prs_code;
 int xored_output;
 
 int main(int argc, char *argv[])
 {
-	FILE *fin1, *fout;
+	FILE *fin1, *fin2, *fout;
 	float modulated_signal[2048];
 	int bit_count = 0;
 	int sample_bits[8];
@@ -38,16 +38,9 @@ int main(int argc, char *argv[])
 	int prs_signal[128];
 	int previous_prs_signal[128];
 	int current_prs_signal[128];
-	prs_sum = (uint64_t *) malloc(sizeof(uint64_t)*2);
+	prs_code = (uint64_t *) malloc(sizeof(uint64_t)*2);
 	signed total_bits_value = 0;
-
-	printf("Loading prs_sum\n");
-	load_prs(prs_sum,1);
 	
-	printf("prs_sum is: \n"); 
-    for (int i = 0; i <= 1; ++i) { 
-        printf("%lu, \n", prs_sum[1-i]);
-    };
 	
 	printf("Get hilbert filter coefficients\n");
 	float hilbert_filter_coefficients[filter_order+1];
@@ -64,20 +57,28 @@ int main(int argc, char *argv[])
 		windowed_filter_coefficients[i] = kaiser_filter_coefficients[i] * hilbert_filter_coefficients[i];
 	};	
 
-	printf("Opening modulated signal\n");
+	printf("Opening prs signal: %s\n", argv[2]);
+	fin2=fopen(argv[2],"rb");
+	if(fin2 == NULL) {
+		printf("ERROR: prs signal %s does not exist\n", argv[2]);
+		exit(1);
+	}
+	printf("Opened prs signal successfully\n");	
+	while (fread(prs_code, sizeof(uint64_t), 2, fin2));
+	
+	printf("Opening modulated signal: %s\n", argv[1]);
 
 	fin1=fopen(argv[1],"rb");
 	if(fin1 == NULL) {
-		printf("ERROR: modulated signal does not exist\n");
+		printf("ERROR: modulated signal %s does not exist\n", argv[1]);
 		exit(1);
 	}
-
 	printf("Opened modulated signal successfully\n");	
 
-	printf("Opening output file\n");	
-	fout=fopen("data/Output","w+b");
+	printf("Opening output %s file\n", argv[3]);	
+	fout=fopen(argv[3],"w+b");
 	if(fout == NULL) {
-		printf("ERROR: output file cannot be created\n");
+		printf("ERROR: output file %s cannot be created\n", argv[3]);
 		exit(1);
 
 	}
@@ -121,7 +122,7 @@ int main(int argc, char *argv[])
 				}
 			}
 	
-			xored_output = xor(prs_sum[1],prs_sum[0],prs_signal);
+			xored_output = xor(prs_code[1],prs_code[0],prs_signal);
 			
 			sample_bits[bit_count] = xored_output;
 			bit_count++;
@@ -183,26 +184,4 @@ int main(int argc, char *argv[])
 
 	exit(0);	
 
-}
-
-int load_prs(uint64_t * modulated_array, int load_choice)
-{
-	FILE *fin2;
-	fin2=fopen("data/prs_sum.dat","rb");
-	printf("Opening prs_sum\n");
-	if(fin2 == NULL) {
-		printf("ERROR: prs_sum does not exist\n");
-		exit(1);
-	}
-	printf("Opened prs_sum successfully\n");
-	
-	// reading 98304016 floats in file
-	fread(modulated_array, sizeof(uint64_t), 2, fin2);
-
-	printf("prs signal loading complete\n");
-
-	// close the files
-	fclose(fin2);
-
-	return 1;
 }
