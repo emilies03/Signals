@@ -20,6 +20,8 @@ const int original_signal_length = 98304016;
 uint64_t * prs_code;
 int xored_output;
 
+//new branch
+
 int main(int argc, char *argv[])
 {
 	FILE *fin1, *fin2, *fout;
