@@ -50,15 +50,34 @@ int block_convolution(int filter_order, float modulated_signal_segment[16], floa
 int phase_detection(float modulated_signal_phase[16], float previous_phase[16])
 {   
     float difference = 0;
+	float in_phase = 0;
+	float out_phase = 0;
+
 
     for(int i=0; i<16; i++){
-        difference += fabs(modulated_signal_phase[i]-previous_phase[i]);
+        difference = fabs(modulated_signal_phase[i]-previous_phase[i]);
+		if(difference < 0.5*M_PI){
+			in_phase += 0.5*M_PI - difference;
+		}
+		else if(difference >= 0.5*M_PI && difference < M_PI){
+			out_phase += difference - 0.5*M_PI;
+		}
+		else if(difference >= M_PI && difference < 1.5*M_PI){
+			out_phase += 1.5*M_PI - difference;
+		}
+		else if(difference >= 1.5*M_PI){
+			in_phase += difference - 1.5*M_PI;
+		}
+		
     }
-	if(difference < (8*M_PI)){
+
+	if(in_phase >= out_phase){
+		//printf("0\n");
 		return 0;
 	}
 	else
 	{
+		//printf("1\n");
 		 return 1;
 	}
 }
