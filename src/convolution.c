@@ -70,14 +70,13 @@ int phase_detection(float modulated_signal_phase[16], float previous_phase[16])
 		}
 		
     }
+	printf("%f, %f\n\n", in_phase, out_phase);
 
 	if(in_phase >= out_phase){
-		//printf("0\n");
 		return 0;
 	}
 	else
 	{
-		//printf("1\n");
 		 return 1;
 	}
 }
