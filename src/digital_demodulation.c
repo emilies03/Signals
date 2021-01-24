@@ -38,6 +38,7 @@ int main(int argc, char *argv[])
 	int prs_signal[128];
 	int previous_prs_signal[128];
 	int current_prs_signal[128];
+	int current_bit = 0;
 	prs_code = (uint64_t *) malloc(sizeof(uint64_t)*2);
 	signed total_bits_value = 0;
 	
@@ -99,11 +100,11 @@ int main(int argc, char *argv[])
 			} 
 
 			int bit = get_phase(filter_order, required_blocks, modulated_signal_segment, modulated_signal_imaginary, tail,
-				modulated_signal_phase, previous_imaginary_block, previous_phase, iterations, windowed_filter_coefficients);	
+				modulated_signal_phase, previous_imaginary_block, previous_phase, iterations, windowed_filter_coefficients, current_bit);	
 			
 
 			previous_prs_signal[j] = current_prs_signal[j];
-			current_prs_signal[j] = bit;
+			current_prs_signal[j] = ~bit;
 			
 			iterations += 1;
 		}
@@ -123,6 +124,7 @@ int main(int argc, char *argv[])
 			}
 	
 			xored_output = xor(prs_code[1],prs_code[0],prs_signal);
+			//fwrite(&xored_output, sizeof(signed char), 1, fout);
 			
 			sample_bits[bit_count] = xored_output;
 			bit_count++;
