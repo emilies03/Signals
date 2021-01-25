@@ -23,8 +23,10 @@ int xored_output;
 
 int main(int argc, char *argv[])
 {	
+	// Timing code to remove
 	clock_t t;
 	t = clock();
+
 	FILE *fin1, *fin2, *fout;
 	float modulated_signal[2048];
 	int bit_count = 0;
@@ -183,9 +185,9 @@ int main(int argc, char *argv[])
 	
 	}
 
+	// Timing code to remove 
 	t = clock() - t;
 	double time_taken = ((double)t)/CLOCKS_PER_SEC;
-  
     printf("Code took %f seconds to execute \n", time_taken);
 
 	fclose(fin1);
