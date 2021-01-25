@@ -3,6 +3,7 @@
 #include<stdint.h>
 #include<math.h>
 #include <stdbool.h>
+#include <time.h>
 #include "hilbert_filter.c"
 #include "kaiser_window.c"
 #include "convolution.c"
@@ -21,7 +22,9 @@ uint64_t * prs_code;
 int xored_output;
 
 int main(int argc, char *argv[])
-{
+{	
+	clock_t t;
+	t = clock();
 	FILE *fin1, *fin2, *fout;
 	float modulated_signal[2048];
 	int bit_count = 0;
@@ -31,7 +34,7 @@ int main(int argc, char *argv[])
 	float modulated_signal_segment[required_blocks*16];
 	float modulated_signal_imaginary[16] = {0};
 	float tail[filter_order];
-	float modulated_signal_phase[16] = {0};
+	float modulated_signal_env[16] = {0};
 	float previous_imaginary_block[16] = {0};
 	int iterations = 0;
 	int prs_signal[128];
@@ -42,15 +45,15 @@ int main(int argc, char *argv[])
 	signed total_bits_value = 0;
 	
 	
-	printf("Get hilbert filter coefficients\n");
+	//printf("Get hilbert filter coefficients\n");
 	float hilbert_filter_coefficients[filter_order+1];
 	hilbert_filter(filter_order, hilbert_filter_coefficients);
 
-	printf("Get Kaiser windowing coefficients\n");
+	//printf("Get Kaiser windowing coefficients\n");
 	float kaiser_filter_coefficients[filter_order+1];
 	kaiser_window(filter_order, kaiser_filter_coefficients, beta);
 
-	printf("Apply kaiser windowing to hilbert filter coefficients\n");
+	//printf("Apply kaiser windowing to hilbert filter coefficients\n");
 	float windowed_filter_coefficients[filter_order+1];
 
 	for(int i=0; i<= filter_order; i++)
@@ -58,31 +61,32 @@ int main(int argc, char *argv[])
 		windowed_filter_coefficients[i] = kaiser_filter_coefficients[i] * hilbert_filter_coefficients[i];
 	};	
 
-	printf("Opening prs signal: %s\n", argv[2]);
+	//printf("Opening prs signal: %s\n", argv[2]);
 	fin2=fopen(argv[2],"rb");
 	if(fin2 == NULL) {
 		printf("ERROR: prs signal %s does not exist\n", argv[2]);
 		exit(1);
 	}
-	printf("Opened prs signal successfully\n");	
+	//printf("Opened prs signal successfully\n");	
 	while (fread(prs_code, sizeof(uint64_t), 2, fin2));
 	fclose(fin2);
+	
+	//printf("Opening modulated signal: %s\n", argv[1]);
 
-	printf("Opening modulated signal: %s\n", argv[1]);
 	fin1=fopen(argv[1],"rb");
 	if(fin1 == NULL) {
 		printf("ERROR: modulated signal %s does not exist\n", argv[1]);
 		exit(1);
 	}
-	printf("Opened modulated signal successfully\n");	
+	//printf("Opened modulated signal successfully\n");	
 
-	printf("Opening output %s file\n", argv[3]);	
+	//printf("Opening output %s file\n", argv[3]);	
 	fout=fopen(argv[3],"w+b");
 	if(fout == NULL) {
 		printf("ERROR: output file %s cannot be created\n", argv[3]);
 		exit(1);
 	}
-	printf("Opened output file successfully\n");	
+	//printf("Opened output file successfully\n");	
 
 	while(fread(modulated_signal, sizeof(float), 2048, fin1))
 	{	
@@ -99,7 +103,7 @@ int main(int argc, char *argv[])
 			} 
 
 			int bit = get_phase(filter_order, required_blocks, modulated_signal_segment, modulated_signal_imaginary, tail,
-				modulated_signal_phase, previous_imaginary_block, iterations, windowed_filter_coefficients, current_bit);	
+				modulated_signal_env, previous_imaginary_block, iterations, windowed_filter_coefficients, current_bit);	
 			
 
 			previous_prs_signal[j] = current_prs_signal[j];
@@ -178,6 +182,11 @@ int main(int argc, char *argv[])
 		}
 	
 	}
+
+	t = clock() - t;
+	double time_taken = ((double)t)/CLOCKS_PER_SEC;
+  
+    printf("Code took %f seconds to execute \n", time_taken);
 
 	fclose(fin1);
 	fclose(fout);

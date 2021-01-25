@@ -12,7 +12,7 @@ int kaiser_window(int filter_order, float kaiser_filter_coefficients[filter_orde
     int n;
     double x;
 
-    printf("finding kaiser window coefficients\n");
+    //printf("finding kaiser window coefficients\n");
     float denominator = bessel(beta);
     for(int i=0; i<=filter_order; i++){
         n = i - filter_order/2;

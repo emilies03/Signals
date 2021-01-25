@@ -49,10 +49,10 @@ int block_convolution(int filter_order, float modulated_signal_segment[16], floa
 }
 
 
-int phase_detection(float modulated_signal_phase[16], int current_bit)
+int phase_detection(float modulated_signal_env[16], int current_bit)
 {   
     for(int i=0; i<16; i++){
-		if(modulated_signal_phase[i] < 0.6){
+		if(modulated_signal_env[i] < 0.6){
 			current_bit = ~current_bit;
 		}
     }
@@ -63,7 +63,7 @@ int phase_detection(float modulated_signal_phase[16], int current_bit)
 
 int get_phase(int filter_order, int required_blocks, float modulated_signal_segment[required_blocks*16],
 	float modulated_signal_imaginary[16], float tail[filter_order],	float modulated_signal_phase[16],
-	float previous_imaginary_block[16], float previous_phase[16], int iterations, float windowed_filter_coefficients[filter_order+1], int current_bit)
+	float previous_imaginary_block[16], int iterations, float windowed_filter_coefficients[filter_order+1], int current_bit)
 {   
 		float next_modulated_signal_segment[16];
 		for(int i=0; i<16; i++){
@@ -79,15 +79,15 @@ int get_phase(int filter_order, int required_blocks, float modulated_signal_segm
 			{
 				if (modulated_signal_segment[i]==0)
 				{
-					modulated_signal_phase[i] = 0;
+					modulated_signal_env[i] = 0;
 				}
 				else
 				{
 					for(int x=0; x<16-imaginary_split; x++){
-						modulated_signal_phase[x] = sqrt(previous_imaginary_block[x+imaginary_split]*previous_imaginary_block[x+imaginary_split] + modulated_signal_segment[x]*modulated_signal_segment[x]);
+						modulated_signal_env[x] = sqrt(previous_imaginary_block[x+imaginary_split]*previous_imaginary_block[x+imaginary_split] + modulated_signal_segment[x]*modulated_signal_segment[x]);
 					}
 					for(int x=16-imaginary_split; x<16; x++){
-						modulated_signal_phase[x] = sqrt(modulated_signal_imaginary[x-(16-imaginary_split)]*modulated_signal_imaginary[x-(16-imaginary_split)] + modulated_signal_segment[x]*modulated_signal_segment[x]);
+						modulated_signal_env[x] = sqrt(modulated_signal_imaginary[x-(16-imaginary_split)]*modulated_signal_imaginary[x-(16-imaginary_split)] + modulated_signal_segment[x]*modulated_signal_segment[x]);
 					}
 				}
 				
@@ -96,7 +96,7 @@ int get_phase(int filter_order, int required_blocks, float modulated_signal_segm
 		}
 		
 		if(iterations > required_blocks-1){
-			return phase_detection(modulated_signal_phase, current_bit);
+			return phase_detection(modulated_signal_env, current_bit);
 		}
 
         return 1;
