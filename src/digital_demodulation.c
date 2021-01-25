@@ -33,7 +33,6 @@ int main(int argc, char *argv[])
 	float tail[filter_order];
 	float modulated_signal_phase[16] = {0};
 	float previous_imaginary_block[16] = {0};
-	float previous_phase[16] = {0};
 	int iterations = 0;
 	int prs_signal[128];
 	int previous_prs_signal[128];
@@ -100,7 +99,7 @@ int main(int argc, char *argv[])
 			} 
 
 			int bit = get_phase(filter_order, required_blocks, modulated_signal_segment, modulated_signal_imaginary, tail,
-				modulated_signal_phase, previous_imaginary_block, previous_phase, iterations, windowed_filter_coefficients, current_bit);	
+				modulated_signal_phase, previous_imaginary_block, iterations, windowed_filter_coefficients, current_bit);	
 			
 
 			previous_prs_signal[j] = current_prs_signal[j];

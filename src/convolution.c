@@ -49,7 +49,7 @@ int block_convolution(int filter_order, float modulated_signal_segment[16], floa
 }
 
 
-int phase_detection(float modulated_signal_phase[16], float previous_phase[16], int current_bit)
+int phase_detection(float modulated_signal_phase[16], int current_bit)
 {   
     for(int i=0; i<16; i++){
 		if(modulated_signal_phase[i] < 0.6){
@@ -73,16 +73,6 @@ int get_phase(int filter_order, int required_blocks, float modulated_signal_segm
 		int imaginary_split = (filter_order/2)%16;
 
 		block_convolution(filter_order, next_modulated_signal_segment, windowed_filter_coefficients, tail, modulated_signal_imaginary);
-
-
-		if(iterations>required_blocks-1)
-		{
-			for(int i=0;i<16;i++)
-			{
-			previous_phase[i] = modulated_signal_phase[i];
-			} 
-		}
-
 		if(iterations > required_blocks-2)
 		{
 			for(int i = 0; i<16; i++)
@@ -106,7 +96,7 @@ int get_phase(int filter_order, int required_blocks, float modulated_signal_segm
 		}
 		
 		if(iterations > required_blocks-1){
-			return phase_detection(modulated_signal_phase, previous_phase, current_bit);
+			return phase_detection(modulated_signal_phase, current_bit);
 		}
 
         return 1;
