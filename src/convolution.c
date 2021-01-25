@@ -12,8 +12,10 @@ int convolution(int length_signal_1, int length_signal_2, float signal_1[length_
     for(i=0; i<length_signal_1+length_signal_2-1; i++){
         sum = 0;
         track = i;
-        for(j=0; j<length_signal_2; j++){
-            if(track>=0 && track<length_signal_1){
+        for(j=0; j<length_signal_2; j++)
+		{
+            if(track>=0 && track<length_signal_1)
+			{
             sum += signal_1[track]*signal_2[j];
             }
             track -= 1;
@@ -49,29 +51,31 @@ int block_convolution(int filter_order, float modulated_signal_segment[16], floa
 
 int phase_detection(float modulated_signal_phase[16], float previous_phase[16])
 {   
-    float difference = 0;
-	float in_phase = 0;
-	float out_phase = 0;
-
+    float difference =0, in_phase=0, out_phase = 0;
 
     for(int i=0; i<16; i++){
         difference = fabs(modulated_signal_phase[i]-previous_phase[i]);
-		if(difference < 0.5*M_PI){
+		if(difference < 0.5*M_PI)
+		{
 			in_phase += 0.5*M_PI - difference;
 		}
-		else if(difference >= 0.5*M_PI && difference < M_PI){
+		else if(difference < M_PI)
+		{
 			out_phase += difference - 0.5*M_PI;
 		}
-		else if(difference >= M_PI && difference < 1.5*M_PI){
+		else if(difference < 1.5*M_PI)
+		{
 			out_phase += 1.5*M_PI - difference;
 		}
-		else if(difference >= 1.5*M_PI){
+		else
+		{
 			in_phase += difference - 1.5*M_PI;
 		}
 		
     }
 
-	if(in_phase >= out_phase){
+	if(in_phase >= out_phase)
+	{
 		return 0;
 	}
 	else
@@ -82,8 +86,7 @@ int phase_detection(float modulated_signal_phase[16], float previous_phase[16])
 
 
 int get_phase(int filter_order, int required_blocks, float modulated_signal_segment[required_blocks*16],
-	float modulated_signal_imaginary[16], float tail[filter_order],
-	float modulated_signal_phase[16],
+	float modulated_signal_imaginary[16], float tail[filter_order],	float modulated_signal_phase[16],
 	float previous_imaginary_block[16], float previous_phase[16], int iterations, float windowed_filter_coefficients[filter_order+1])
 {   
 		float next_modulated_signal_segment[16];
@@ -96,17 +99,20 @@ int get_phase(int filter_order, int required_blocks, float modulated_signal_segm
 		block_convolution(filter_order, next_modulated_signal_segment, windowed_filter_coefficients, tail, modulated_signal_imaginary);
 
 
-		if(iterations>required_blocks-1){
-			for(int i=0;i<16;i++){
+		if(iterations>required_blocks-1)
+		{
+			for(int i=0;i<16;i++)
+			{
 			previous_phase[i] = modulated_signal_phase[i];
 			} 
 		}
 
-		if(iterations > required_blocks-2){
-			for(int i = 0; i<16; i++){
+		if(iterations > required_blocks-2)
+		{
+			for(int i = 0; i<16; i++)
+			{
 				if (modulated_signal_segment[i]==0)
 				{
-					printf("REAL PART IS ZERO!!!!!!!!!!\n");
 					modulated_signal_phase[i] = 0;
 				}
 				else
