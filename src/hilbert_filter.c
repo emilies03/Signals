@@ -8,18 +8,11 @@ int hilbert_filter(int filter_order, float hilbert_filter_coefficients[filter_or
     int numbers[filter_order+1];
     int i;
 
-    //This array contains the final hilbert filter coefficients
-    //float hilbert_filter_coefficients[filter_order+1];
-    
- 
-
-    //Loop puts order numbers in each array slot
-    for(i=0; i<=filter_order; i++){
-        numbers[i] = i - filter_order/2;
-    }
-
     //Places zeros in even slots and calculates Hilbert coefficient in odd slots
     for(i=0; i<= filter_order; i++){
+
+        numbers[i] = i - filter_order/2;
+
         if(numbers[i] % 2 == 0){
             hilbert_filter_coefficients[i] = 0;
         }
@@ -27,10 +20,6 @@ int hilbert_filter(int filter_order, float hilbert_filter_coefficients[filter_or
             hilbert_filter_coefficients[i] = 2/(numbers[i]*M_PI);
         }
 
-        //uncomment to print filter coefficients to terminal
-
-        //printf("%f", hilbert_filter_coefficients[i]);
-        //printf("\n");
     }
 
     return 1;

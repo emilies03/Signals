@@ -39,8 +39,8 @@ int xor(unsigned long long prs1, unsigned long long prs2, int in_array[128]){
     if(((average_bit_1+average_bit_2)/2) >= 0.5){
         final_bit = 1;
     }
-
-    if(((average_bit_1+average_bit_2)/2) < 0.5){
+    else
+    {
         final_bit = 0;
     }
 
@@ -59,16 +59,14 @@ double uint64_to_bin(unsigned long long xored_prs_input){
             xored_prs_input = xored_prs_input/2;
         }
     }
-    for (i = 0; i < 64; i++){
-    }
     return (double)sum/64;
 }
 
 unsigned long long bin_to_uint64(int binary_array[64]){
     int i = 0;
-    unsigned long n = 0;
-    unsigned long sum = 0;
-    for (i = 0; i < 64; i++) {
+    unsigned long n, sum = 0;
+    for (i = 0; i < 64; i++)
+    {
         n = pow(2,(double)i);
         sum += (n * binary_array[63-i]);
     }

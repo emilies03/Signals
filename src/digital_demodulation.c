@@ -8,15 +8,15 @@
 #include "convolution.c"
 #include "xor.c"
 
+#define filter_order 40
+#define beta 4.54
+
 int hilbert_filter();
 int convolution();
 int block_convolution();
 int phase_detection();
 int get_phase();
 int load_prs();
-const float beta = 4.54;
-const int filter_order = 40;
-const int original_signal_length = 98304016;
 uint64_t * prs_code;
 int xored_output;
 
@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 	int bit_count = 0;
 	int sample_bits[8];
 	float elements = (filter_order/2)+16;
-	int required_blocks = ceil( elements/16 );
+	const int required_blocks = ceil( elements/16 );
 	float modulated_signal_segment[required_blocks*16];
 	float modulated_signal_imaginary[16] = {0};
 	float tail[filter_order];
@@ -52,6 +52,7 @@ int main(int argc, char *argv[])
 
 	printf("Apply kaiser windowing to hilbert filter coefficients\n");
 	float windowed_filter_coefficients[filter_order+1];
+
 	for(int i=0; i<= filter_order; i++)
 	{
 		windowed_filter_coefficients[i] = kaiser_filter_coefficients[i] * hilbert_filter_coefficients[i];
@@ -65,9 +66,9 @@ int main(int argc, char *argv[])
 	}
 	printf("Opened prs signal successfully\n");	
 	while (fread(prs_code, sizeof(uint64_t), 2, fin2));
-	
-	printf("Opening modulated signal: %s\n", argv[1]);
+	fclose(fin2);
 
+	printf("Opening modulated signal: %s\n", argv[1]);
 	fin1=fopen(argv[1],"rb");
 	if(fin1 == NULL) {
 		printf("ERROR: modulated signal %s does not exist\n", argv[1]);
@@ -80,7 +81,6 @@ int main(int argc, char *argv[])
 	if(fout == NULL) {
 		printf("ERROR: output file %s cannot be created\n", argv[3]);
 		exit(1);
-
 	}
 	printf("Opened output file successfully\n");	
 
@@ -167,7 +167,6 @@ int main(int argc, char *argv[])
 								
 				bit_count =0;
 
-			/////////////// !!!!!!!!!! UPSAMPLE/DOWNSAMPLE !!!!!!!!!!
 				// write to file
 				total_bits_value = (signed char)total_bits_value;
 
@@ -181,6 +180,8 @@ int main(int argc, char *argv[])
 
 	fclose(fin1);
 	fclose(fout);
+
+	printf("Output has been written to %s successfully \n", argv[3]);
 
 	exit(0);	
 
