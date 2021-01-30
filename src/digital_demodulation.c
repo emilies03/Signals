@@ -4,6 +4,7 @@
 #include<math.h>
 #include <stdbool.h>
 #include <time.h>
+#include <fftw3.h>
 #include "hilbert_filter.c"
 #include "kaiser_window.c"
 #include "convolution.c"
@@ -21,6 +22,8 @@ int load_prs();
 uint64_t * prs_code;
 int xored_output;
 
+fftw_plan filter_plan, signal_plan, inverse_plan;
+
 int main(int argc, char *argv[])
 {	
 	// Timing code to remove
@@ -32,11 +35,10 @@ int main(int argc, char *argv[])
 	int bit_count = 0;
 	int sample_bits[8];
 	float elements = (filter_order/2)+16;
-	const int required_blocks = ceil( elements/16 );
-	float modulated_signal_segment[required_blocks*16];
+	int required_blocks = ceil( elements/16 );
+	float modulated_signal_segment[filter_order+1] = {0};
 	float modulated_signal_imaginary[16] = {0};
-	float tail[filter_order];
-	float modulated_signal_env[16] = {0};
+	float tail[filter_order] = {0};
 	float previous_imaginary_block[16] = {0};
 	int iterations = 0;
 	int prs_signal[128];
@@ -45,7 +47,15 @@ int main(int argc, char *argv[])
 	int current_bit = 0;
 	prs_code = (uint64_t *) malloc(sizeof(uint64_t)*2);
 	signed total_bits_value = 0;
-	
+
+	double *fft_windowed_filter_coefficients;
+	fft_windowed_filter_coefficients = fftw_malloc((filter_order+1)*sizeof(double));
+	double *fft_modulated_signal_segment;
+	fft_modulated_signal_segment = fftw_malloc((filter_order+1)*sizeof(double));
+	double *fft_result;
+	fft_result = fftw_malloc((filter_order+1)*sizeof(double));
+	double *inverse_fft_result;
+	inverse_fft_result = fftw_malloc((filter_order+1)*sizeof(double));
 	
 	//printf("Get hilbert filter coefficients\n");
 	float hilbert_filter_coefficients[filter_order+1];
@@ -62,6 +72,12 @@ int main(int argc, char *argv[])
 	{
 		windowed_filter_coefficients[i] = kaiser_filter_coefficients[i] * hilbert_filter_coefficients[i];
 	};	
+
+	signal_plan = fftw_plan_r2r_1d(filter_order+1, modulated_signal_segment, fft_modulated_signal_segment, FFTW_R2HC, FFTW_ESTIMATE);
+	filter_plan = fftw_plan_r2r_1d(filter_order+1, windowed_filter_coefficients, fft_windowed_filter_coefficients, FFTW_R2HC, FFTW_ESTIMATE);
+	inverse_plan = fftw_plan_r2r_1d(filter_order+1, fft_result, inverse_fft_result, FFTW_HC2R, FFTW_ESTIMATE);
+	fftw_execute(filter_plan);
+
 
 	//printf("Opening prs signal: %s\n", argv[2]);
 	fin2=fopen(argv[2],"rb");
@@ -96,19 +112,42 @@ int main(int argc, char *argv[])
 		{			
 			for(int i=0;i<16;i++)
 			{
-				previous_imaginary_block[i] = modulated_signal_imaginary[i];
-				for(int x=0; x<required_blocks-1; x++)
-				{
-					modulated_signal_segment[i+x*16] = modulated_signal_segment[i+(x+1)*16];
-				}
-				modulated_signal_segment[i+(required_blocks-1)*16] = modulated_signal[j*16+i];
+				modulated_signal_segment[i] = modulated_signal[j*16+i];
 			} 
 
-			int bit = get_phase(filter_order, required_blocks, modulated_signal_segment, modulated_signal_imaginary, tail,
-				modulated_signal_env, previous_imaginary_block, iterations, windowed_filter_coefficients, current_bit);	
-			
+			fftw_execute(signal_plan);
 
-			previous_prs_signal[j] = current_prs_signal[j];
+			fft_result[0] = fft_modulated_signal_segment[0]*fft_windowed_filter_coefficients[0];
+
+			for(int i=1;i<(filter_order+1+1)/2;i++) 
+			{
+				fft_result[i] = fft_modulated_signal_segment[i]*fft_windowed_filter_coefficients[i]-fft_modulated_signal_segment[filter_order+1-i]*fft_windowed_filter_coefficients[filter_order+1-i]; //real
+				fft_result[filter_order+1-i] = fft_modulated_signal_segment[filter_order+1-i]*fft_windowed_filter_coefficients[i]+fft_modulated_signal_segment[i]*fft_windowed_filter_coefficients[filter_order+1-i]; //imag
+			}	
+
+			// not necessary for even filter order
+			if(filter_order+1 % 2 == 0)
+			{
+				fft_result[(filter_order+1)/2] = fft_modulated_signal_segment[(filter_order+1)/2]*fft_windowed_filter_coefficients[(filter_order+1)/2];
+			}
+			
+			fftw_execute(inverse_plan);
+
+			for(int i=0; i<16; i++){
+				modulated_signal_imaginary[i] = inverse_fft_result[i] + tail[i];
+			}
+			for(int i=0; i<9; i++){
+				tail[i] = tail[i+16] +  inverse_fft_result[i+16];
+			}
+			for(int i=9; i<25; i++){
+				tail[i] = inverse_fft_result[i+16];
+			}
+
+
+			//block_convolution(filter_order, next_modulated_signal_segment, windowed_filter_coefficients, tail, modulated_signal_imaginary);
+
+			int bit = get_phase(filter_order, modulated_signal_segment, modulated_signal_imaginary, current_bit);	
+			
 			current_prs_signal[j] = ~bit;
 			
 			iterations += 1;
@@ -181,8 +220,8 @@ int main(int argc, char *argv[])
 				total_bits_value = (signed)total_bits_value;
 				total_bits_value = 0;
 			}
+		
 		}
-	
 	}
 
 	// Timing code to remove 

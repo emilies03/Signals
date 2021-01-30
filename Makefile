@@ -11,7 +11,7 @@ CCOMP = gcc
 CFLAGS = -Wall -O3 -fstrict-aliasing
 
 # flags for the linker - note -lm for the math library
-LDFLAGS = -O3 -lm -L/usr/lib
+LDFLAGS = -O3 -lm -L/usr/lib -lfftw3
 
 # the name of your executable file (the target) - here we put it in the top directory
 TARGET = build/digital_demodulation
