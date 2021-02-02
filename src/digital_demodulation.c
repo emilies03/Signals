@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
 	float previous_imaginary[2048] = {0};
 	float tail[filter_order] = {0};
 	int iterations = 0;
-	int prs_signal[128] = {1};
+	int prs_signal[128] = {0};
 	prs_code = (uint64_t *) malloc(sizeof(uint64_t)*2);
 	signed total_bits_value = 0;
 
@@ -69,6 +69,7 @@ int main(int argc, char *argv[])
 	for(int i=0; i<= filter_order; i++)
 	{
 		windowed_filter_coefficients[i] = kaiser_filter_coefficients[i] * hilbert_filter_coefficients[i];
+		//printf("%lf,", windowed_filter_coefficients[i]);
 	};	
 
 	signal_plan = fftw_plan_r2r_1d(2088, modulated_signal_in, fft_modulated_signal_segment, FFTW_R2HC, FFTW_ESTIMATE);
@@ -114,19 +115,53 @@ int main(int argc, char *argv[])
 
 		fft_result[0] = fft_modulated_signal_segment[0]*fft_windowed_filter_coefficients[0];
 
-		for(int i=1;i<(filter_order+1+1)/2;i++) 
+		for(int i=1;i<(2088+1)/2;i++) 
 		{
-			fft_result[i] = fft_modulated_signal_segment[i]*fft_windowed_filter_coefficients[i]-fft_modulated_signal_segment[filter_order+1-i]*fft_windowed_filter_coefficients[filter_order+1-i]; //real
-			fft_result[filter_order+1-i] = fft_modulated_signal_segment[filter_order+1-i]*fft_windowed_filter_coefficients[i]+fft_modulated_signal_segment[i]*fft_windowed_filter_coefficients[filter_order+1-i]; //imag
+			fft_result[i] = fft_modulated_signal_segment[i]*fft_windowed_filter_coefficients[i]-fft_modulated_signal_segment[2088-i]*fft_windowed_filter_coefficients[2088-i]; //real
+			fft_result[2088-i] = fft_modulated_signal_segment[2088-i]*fft_windowed_filter_coefficients[i]+fft_modulated_signal_segment[i]*fft_windowed_filter_coefficients[2088-i]; //imag
 		}	
 
 		// not necessary for even filter order
-		if(filter_order+1 % 2 == 0)
+		if(2088 % 2 == 0)
 		{
-			fft_result[(filter_order+1)/2] = fft_modulated_signal_segment[(filter_order+1)/2]*fft_windowed_filter_coefficients[(filter_order+1)/2];
+			fft_result[2088/2] = fft_modulated_signal_segment[2088/2]*fft_windowed_filter_coefficients[2088/2];
 		}
 		
 		fftw_execute(inverse_plan);
+		
+		
+		if(iterations < 1)
+		{	
+			printf("fft signal in\n");
+			printf("%lf \n", fft_modulated_signal_segment[0]);
+			for(int i=1; i<4; i++)
+			{
+			printf("%lf ", fft_modulated_signal_segment[i]);
+			printf("%+lf i, \n", fft_modulated_signal_segment[2088-i]);
+			}
+			printf("\n");
+
+			printf("fft windowed filter\n");
+			printf("%lf \n", fft_windowed_filter_coefficients[0]);
+			for(int i=1; i<4; i++)
+			{
+			printf("%lf ", fft_windowed_filter_coefficients[i]);
+			printf("%+lf i, \n", fft_windowed_filter_coefficients[2088-i]);
+			}
+			printf("\n");
+
+			printf("fft result\n");
+			printf("%lf \n", fft_result[0]);
+			for(int i=1; i<4; i++)
+			{
+			printf("%lf ", fft_result[i]);
+			printf("%+lf i, \n", fft_result[2088-i]);
+			}
+			printf("\n");
+
+		}
+		
+		
 
 		for(int i=0; i<filter_order; i++){
 			inverse_fft_result[i] = inverse_fft_result[i] + tail[i];
@@ -149,16 +184,21 @@ int main(int argc, char *argv[])
 			imag_detect_in[i+2028] = modulated_signal_imaginary[i];
 		}
 		
+	
 		
 		
 		iterations += 1;
+		
 
 
 		if(iterations>1)
 		{	
 			get_phase(real_detect_in, imag_detect_in, prs_signal);
-
 			//current_prs_signal[j] = ~bit;
+
+			//for(int i=0; i<128; i++){
+			//	printf("%d",prs_signal[i]);
+			//}
 	
 			xored_output = xor(prs_code[1],prs_code[0],prs_signal);
 			fwrite(&xored_output, sizeof(signed char), 1, fout);
