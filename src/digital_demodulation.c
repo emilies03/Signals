@@ -116,53 +116,47 @@ int main(int argc, char *argv[])
 			modulated_signal_in[i] = modulated_signal[i];
 		}
 
-		for (int j=0; j<128; j++)
-		{			
-			for(int i=0;i<16;i++)
-			{
-				modulated_signal_segment[i] = modulated_signal[j*16+i];
-			} 
-
-			fftw_execute(signal_plan);
-
-			fft_result[0] = fft_modulated_signal_segment[0]*fft_windowed_filter_coefficients[0];
-
-			for(int i=1;i<(filter_order+1+1)/2;i++) 
-			{
-				fft_result[i] = fft_modulated_signal_segment[i]*fft_windowed_filter_coefficients[i]-fft_modulated_signal_segment[filter_order+1-i]*fft_windowed_filter_coefficients[filter_order+1-i]; //real
-				fft_result[filter_order+1-i] = fft_modulated_signal_segment[filter_order+1-i]*fft_windowed_filter_coefficients[i]+fft_modulated_signal_segment[i]*fft_windowed_filter_coefficients[filter_order+1-i]; //imag
-			}	
-
-			// not necessary for even filter order
-			if(filter_order+1 % 2 == 0)
-			{
-				fft_result[(filter_order+1)/2] = fft_modulated_signal_segment[(filter_order+1)/2]*fft_windowed_filter_coefficients[(filter_order+1)/2];
-			}
-			
-			fftw_execute(inverse_plan);
-
-			for(int i=0; i<16; i++){
-				modulated_signal_imaginary[i] = inverse_fft_result[i] + tail[i];
-			}
-			for(int i=0; i<9; i++){
-				tail[i] = tail[i+16] +  inverse_fft_result[i+16];
-			}
-			for(int i=9; i<25; i++){
-				tail[i] = inverse_fft_result[i+16];
-			}
 
 
-			//block_convolution(filter_order, next_modulated_signal_segment, windowed_filter_coefficients, tail, modulated_signal_imaginary);
+		fftw_execute(signal_plan);
 
-			int bit = get_phase(filter_order, modulated_signal_segment, modulated_signal_imaginary, current_bit);	
-			
-			current_prs_signal[j] = ~bit;
-			
-			iterations += 1;
+		fft_result[0] = fft_modulated_signal_segment[0]*fft_windowed_filter_coefficients[0];
+
+		for(int i=1;i<(filter_order+1+1)/2;i++) 
+		{
+			fft_result[i] = fft_modulated_signal_segment[i]*fft_windowed_filter_coefficients[i]-fft_modulated_signal_segment[filter_order+1-i]*fft_windowed_filter_coefficients[filter_order+1-i]; //real
+			fft_result[filter_order+1-i] = fft_modulated_signal_segment[filter_order+1-i]*fft_windowed_filter_coefficients[i]+fft_modulated_signal_segment[i]*fft_windowed_filter_coefficients[filter_order+1-i]; //imag
+		}	
+
+		// not necessary for even filter order
+		if(filter_order+1 % 2 == 0)
+		{
+			fft_result[(filter_order+1)/2] = fft_modulated_signal_segment[(filter_order+1)/2]*fft_windowed_filter_coefficients[(filter_order+1)/2];
+		}
+		
+		fftw_execute(inverse_plan);
+
+		for(int i=0; i<filter_order; i++){
+			inverse_fft_result[i] = inverse_fft_result[i] + tail[i];
 		}
 
-		if(iterations>128)
-		{
+    	for(int i=0; i<2048; i++){
+			modulated_signal_imaginary[i] = inverse_fft_result[i];
+		} 
+
+    	for(int i=0; i<filter_order; i++){
+			tail[i] = inverse_fft_result[i+2048];
+		}
+			
+		
+		//current_prs_signal[j] = ~bit;
+		
+		iterations += 1;
+
+		if(iterations>1)
+		{	
+			int bit = get_phase(filter_order, modulated_signal_segment, modulated_signal_imaginary, current_bit);
+
 			for (int k=0; k<128; k++)
 			{
 				if (k < 128-required_blocks)
