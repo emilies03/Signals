@@ -35,18 +35,11 @@ int main(int argc, char *argv[])
 	double modulated_signal_in[2088] = {0};
 	int bit_count = 0;
 	int sample_bits[8];
-	float elements = (filter_order/2)+16;
-	int required_blocks = ceil( elements/16 );
-	float modulated_signal_segment[filter_order+1] = {0};
 	float modulated_signal_imaginary[2048] = {0};
 	float previous_imaginary[2048] = {0};
-	float previous_in[2048] = {0};
 	float tail[filter_order] = {0};
 	int iterations = 0;
-	int prs_signal[128];
-	int previous_prs_signal[128];
-	int current_prs_signal[128];
-	int current_bit = 0;
+	int prs_signal[128] = {1};
 	prs_code = (uint64_t *) malloc(sizeof(uint64_t)*2);
 	signed total_bits_value = 0;
 
@@ -77,10 +70,6 @@ int main(int argc, char *argv[])
 	{
 		windowed_filter_coefficients[i] = kaiser_filter_coefficients[i] * hilbert_filter_coefficients[i];
 	};	
-
-	for(int i=0; i<2088; i++){
-		printf("%f\n", windowed_filter_coefficients[i]);
-	}
 
 	signal_plan = fftw_plan_r2r_1d(2088, modulated_signal_in, fft_modulated_signal_segment, FFTW_R2HC, FFTW_ESTIMATE);
 	filter_plan = fftw_plan_r2r_1d(2088, windowed_filter_coefficients, fft_windowed_filter_coefficients, FFTW_R2HC, FFTW_ESTIMATE);
@@ -167,24 +156,12 @@ int main(int argc, char *argv[])
 
 		if(iterations>1)
 		{	
-			int bit = get_phase(filter_order, real_detect_in, imag_detect_in, current_bit);
+			get_phase(real_detect_in, imag_detect_in, prs_signal);
 
-			current_prs_signal[j] = ~bit;
-
-			for (int k=0; k<128; k++)
-			{
-				if (k < 128-required_blocks)
-				{
-					prs_signal[k] = previous_prs_signal[k+required_blocks];
-				}
-				else
-				{
-					prs_signal[k] = current_prs_signal[k-(128-required_blocks)];
-				}
-			}
+			//current_prs_signal[j] = ~bit;
 	
 			xored_output = xor(prs_code[1],prs_code[0],prs_signal);
-			//fwrite(&xored_output, sizeof(signed char), 1, fout);
+			fwrite(&xored_output, sizeof(signed char), 1, fout);
 			
 			sample_bits[bit_count] = xored_output;
 			bit_count++;
@@ -232,11 +209,15 @@ int main(int argc, char *argv[])
 				// write to file
 				total_bits_value = (signed char)total_bits_value;
 
-				fwrite(&total_bits_value, sizeof(signed char), 1, fout);
+				//fwrite(&total_bits_value, sizeof(signed char), 1, fout);
 				total_bits_value = (signed)total_bits_value;
 				total_bits_value = 0;
 			}
 		
+		}
+
+		for(int i=0; i<2048; i++){
+			real_detect_in[i] = modulated_signal[i];
 		}
 	}
 

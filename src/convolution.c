@@ -5,19 +5,26 @@
 
 
 
-int get_phase(int filter_order, float modulated_signal_segment[filter_order+1], float modulated_signal_imaginary[16], int current_bit)
+int get_phase(float real_detect_in[2048], float imaginary_detect_in[2048], int prs_signal[128])
 {   	
 	float modulated_signal_env[16] = {0};
-	
-	for(int i = 0; i<16; i++)
-	{
-		modulated_signal_env[i] = sqrt(modulated_signal_imaginary[i]*modulated_signal_imaginary[i] + modulated_signal_segment[i]*modulated_signal_segment[i]);
+	int current_bit = prs_signal[127];
 
-		if(modulated_signal_env[i] < 0.6)
+	for(int j=0; j<128; j++){
+	
+		for(int i = 0; i<16; i++)
 		{
-			current_bit = ~current_bit;
+			modulated_signal_env[i] = sqrt(imaginary_detect_in[i+j*16]*imaginary_detect_in[i+j*16] + real_detect_in[i+j*16]*real_detect_in[i+j*16]);
+
+			if(modulated_signal_env[i] < 0.6)
+			{
+				current_bit = ~current_bit;
+			}
 		}
+
+		prs_signal[j] = current_bit;
+	
 	}
 				
-	return current_bit;
+	return 1;
 }
