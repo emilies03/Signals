@@ -38,7 +38,9 @@ int main(int argc, char *argv[])
 	float elements = (filter_order/2)+16;
 	int required_blocks = ceil( elements/16 );
 	float modulated_signal_segment[filter_order+1] = {0};
-	float modulated_signal_imaginary[16] = {0};
+	float modulated_signal_imaginary[2048] = {0};
+	float previous_imaginary[2048] = {0};
+	float previous_in[2048] = {0};
 	float tail[filter_order] = {0};
 	int iterations = 0;
 	int prs_signal[128];
@@ -47,6 +49,9 @@ int main(int argc, char *argv[])
 	int current_bit = 0;
 	prs_code = (uint64_t *) malloc(sizeof(uint64_t)*2);
 	signed total_bits_value = 0;
+
+	float real_detect_in[2048] = {0};
+	float imag_detect_in[2048] = {0};
 
 	double *fft_windowed_filter_coefficients;
 	fft_windowed_filter_coefficients = fftw_malloc((2088)*sizeof(double));
@@ -116,8 +121,6 @@ int main(int argc, char *argv[])
 			modulated_signal_in[i] = modulated_signal[i];
 		}
 
-
-
 		fftw_execute(signal_plan);
 
 		fft_result[0] = fft_modulated_signal_segment[0]*fft_windowed_filter_coefficients[0];
@@ -141,21 +144,32 @@ int main(int argc, char *argv[])
 		}
 
     	for(int i=0; i<2048; i++){
+			previous_imaginary[i] = modulated_signal_imaginary[i];
 			modulated_signal_imaginary[i] = inverse_fft_result[i];
 		} 
 
     	for(int i=0; i<filter_order; i++){
 			tail[i] = inverse_fft_result[i+2048];
 		}
-			
+
+
+		for(int i=0; i<2028; i++){
+			imag_detect_in[i] = previous_imaginary[i];
+		}
+		for(int i=0; i<20; i++){
+			imag_detect_in[i+2028] = modulated_signal_imaginary[i];
+		}
 		
-		//current_prs_signal[j] = ~bit;
+		
 		
 		iterations += 1;
 
+
 		if(iterations>1)
 		{	
-			int bit = get_phase(filter_order, modulated_signal_segment, modulated_signal_imaginary, current_bit);
+			int bit = get_phase(filter_order, real_detect_in, imag_detect_in, current_bit);
+
+			current_prs_signal[j] = ~bit;
 
 			for (int k=0; k<128; k++)
 			{
