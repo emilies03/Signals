@@ -32,6 +32,7 @@ int main(int argc, char *argv[])
 
 	FILE *fin1, *fin2, *fout;
 	float modulated_signal[2048];
+	double modulated_signal_in[2088] = {0};
 	int bit_count = 0;
 	int sample_bits[8];
 	float elements = (filter_order/2)+16;
@@ -39,7 +40,6 @@ int main(int argc, char *argv[])
 	float modulated_signal_segment[filter_order+1] = {0};
 	float modulated_signal_imaginary[16] = {0};
 	float tail[filter_order] = {0};
-	float previous_imaginary_block[16] = {0};
 	int iterations = 0;
 	int prs_signal[128];
 	int previous_prs_signal[128];
@@ -49,13 +49,13 @@ int main(int argc, char *argv[])
 	signed total_bits_value = 0;
 
 	double *fft_windowed_filter_coefficients;
-	fft_windowed_filter_coefficients = fftw_malloc((filter_order+1)*sizeof(double));
+	fft_windowed_filter_coefficients = fftw_malloc((2088)*sizeof(double));
 	double *fft_modulated_signal_segment;
-	fft_modulated_signal_segment = fftw_malloc((filter_order+1)*sizeof(double));
+	fft_modulated_signal_segment = fftw_malloc((2088)*sizeof(double));
 	double *fft_result;
-	fft_result = fftw_malloc((filter_order+1)*sizeof(double));
+	fft_result = fftw_malloc((2088)*sizeof(double));
 	double *inverse_fft_result;
-	inverse_fft_result = fftw_malloc((filter_order+1)*sizeof(double));
+	inverse_fft_result = fftw_malloc((2088)*sizeof(double));
 	
 	//printf("Get hilbert filter coefficients\n");
 	float hilbert_filter_coefficients[filter_order+1];
@@ -66,16 +66,20 @@ int main(int argc, char *argv[])
 	kaiser_window(filter_order, kaiser_filter_coefficients, beta);
 
 	//printf("Apply kaiser windowing to hilbert filter coefficients\n");
-	float windowed_filter_coefficients[filter_order+1];
+	double windowed_filter_coefficients[2088] = {0};
 
 	for(int i=0; i<= filter_order; i++)
 	{
 		windowed_filter_coefficients[i] = kaiser_filter_coefficients[i] * hilbert_filter_coefficients[i];
 	};	
 
-	signal_plan = fftw_plan_r2r_1d(filter_order+1, modulated_signal_segment, fft_modulated_signal_segment, FFTW_R2HC, FFTW_ESTIMATE);
-	filter_plan = fftw_plan_r2r_1d(filter_order+1, windowed_filter_coefficients, fft_windowed_filter_coefficients, FFTW_R2HC, FFTW_ESTIMATE);
-	inverse_plan = fftw_plan_r2r_1d(filter_order+1, fft_result, inverse_fft_result, FFTW_HC2R, FFTW_ESTIMATE);
+	for(int i=0; i<2088; i++){
+		printf("%f\n", windowed_filter_coefficients[i]);
+	}
+
+	signal_plan = fftw_plan_r2r_1d(2088, modulated_signal_in, fft_modulated_signal_segment, FFTW_R2HC, FFTW_ESTIMATE);
+	filter_plan = fftw_plan_r2r_1d(2088, windowed_filter_coefficients, fft_windowed_filter_coefficients, FFTW_R2HC, FFTW_ESTIMATE);
+	inverse_plan = fftw_plan_r2r_1d(2088, fft_result, inverse_fft_result, FFTW_HC2R, FFTW_ESTIMATE);
 	fftw_execute(filter_plan);
 
 
@@ -108,6 +112,10 @@ int main(int argc, char *argv[])
 
 	while(fread(modulated_signal, sizeof(float), 2048, fin1))
 	{	
+		for(int i=0; i<2048; i++){
+			modulated_signal_in[i] = modulated_signal[i];
+		}
+
 		for (int j=0; j<128; j++)
 		{			
 			for(int i=0;i<16;i++)
