@@ -55,21 +55,17 @@ int main(int argc, char *argv[])
 	double *inverse_fft_result;
 	inverse_fft_result = fftw_malloc((2088)*sizeof(double));
 	
-	//printf("Get hilbert filter coefficients\n");
 	float hilbert_filter_coefficients[filter_order+1];
 	hilbert_filter(filter_order, hilbert_filter_coefficients);
 
-	//printf("Get Kaiser windowing coefficients\n");
 	float kaiser_filter_coefficients[filter_order+1];
 	kaiser_window(filter_order, kaiser_filter_coefficients, beta);
 
-	//printf("Apply kaiser windowing to hilbert filter coefficients\n");
 	double windowed_filter_coefficients[2088] = {0};
 
 	for(int i=0; i<= filter_order; i++)
 	{
 		windowed_filter_coefficients[i] = kaiser_filter_coefficients[i] * hilbert_filter_coefficients[i];
-		//printf("%lf,", windowed_filter_coefficients[i]);
 	};	
 
 	signal_plan = fftw_plan_r2r_1d(2088, modulated_signal_in, fft_modulated_signal_segment, FFTW_R2HC, FFTW_ESTIMATE);
@@ -78,36 +74,33 @@ int main(int argc, char *argv[])
 	fftw_execute(filter_plan);
 
 
-	//printf("Opening prs signal: %s\n", argv[2]);
 	fin2=fopen(argv[2],"rb");
-	if(fin2 == NULL) {
+	if(fin2 == NULL) 
+	{
 		printf("ERROR: prs signal %s does not exist\n", argv[2]);
 		exit(1);
 	}
-	//printf("Opened prs signal successfully\n");	
 	while (fread(prs_code, sizeof(uint64_t), 2, fin2));
 	fclose(fin2);
-	
-	//printf("Opening modulated signal: %s\n", argv[1]);
 
 	fin1=fopen(argv[1],"rb");
-	if(fin1 == NULL) {
+	if(fin1 == NULL) 
+	{
 		printf("ERROR: modulated signal %s does not exist\n", argv[1]);
 		exit(1);
 	}
-	//printf("Opened modulated signal successfully\n");	
-
-	//printf("Opening output %s file\n", argv[3]);	
+	
 	fout=fopen(argv[3],"w+b");
-	if(fout == NULL) {
+	if(fout == NULL) 
+	{
 		printf("ERROR: output file %s cannot be created\n", argv[3]);
 		exit(1);
 	}
-	//printf("Opened output file successfully\n");	
 
 	while(fread(modulated_signal, sizeof(float), 2048, fin1))
 	{	
-		for(int i=0; i<2048; i++){
+		for(int i=0; i<2048; i++)
+		{
 			modulated_signal_in[i] = modulated_signal[i];
 		}
 
@@ -129,79 +122,53 @@ int main(int argc, char *argv[])
 		
 		fftw_execute(inverse_plan);
 		
-		
-		if(iterations < 1)
-		{	
-			printf("fft signal in\n");
-			printf("%lf \n", fft_modulated_signal_segment[0]);
-			for(int i=1; i<4; i++)
-			{
-			printf("%lf ", fft_modulated_signal_segment[i]);
-			printf("%+lf i, \n", fft_modulated_signal_segment[2088-i]);
-			}
-			printf("\n");
-
-			printf("fft windowed filter\n");
-			printf("%lf \n", fft_windowed_filter_coefficients[0]);
-			for(int i=1; i<4; i++)
-			{
-			printf("%lf ", fft_windowed_filter_coefficients[i]);
-			printf("%+lf i, \n", fft_windowed_filter_coefficients[2088-i]);
-			}
-			printf("\n");
-
-			printf("fft result\n");
-			printf("%lf \n", fft_result[0]);
-			for(int i=1; i<4; i++)
-			{
-			printf("%lf ", fft_result[i]);
-			printf("%+lf i, \n", fft_result[2088-i]);
-			}
-			printf("\n");
-
-		}
-		
-		
-
-		for(int i=0; i<filter_order; i++){
-			inverse_fft_result[i] = inverse_fft_result[i] + tail[i];
+		for(int i=0; i<2088; i++)
+		{
+			inverse_fft_result[i] = inverse_fft_result[i]/2088;
 		}
 
-    	for(int i=0; i<2048; i++){
+		for(int i=0; i<filter_order; i++)
+		{
+			inverse_fft_result[i] = inverse_fft_result[i]+ tail[i];
+		}
+
+    	for(int i=0; i<2048; i++)
+		{
 			previous_imaginary[i] = modulated_signal_imaginary[i];
 			modulated_signal_imaginary[i] = inverse_fft_result[i];
 		} 
 
-    	for(int i=0; i<filter_order; i++){
+    	for(int i=0; i<filter_order; i++)
+		{
 			tail[i] = inverse_fft_result[i+2048];
 		}
 
-
-		for(int i=0; i<2028; i++){
-			imag_detect_in[i] = previous_imaginary[i];
+		for(int i=0; i<2028; i++)
+		{
+			imag_detect_in[i] = previous_imaginary[i+20];
 		}
-		for(int i=0; i<20; i++){
+
+		for(int i=0; i<20; i++)
+		{
 			imag_detect_in[i+2028] = modulated_signal_imaginary[i];
 		}
 		
-	
-		
-		
 		iterations += 1;
-		
-
 
 		if(iterations>1)
 		{	
+		
+/*		if(iterations<30)
+		{
+			printf("%lf ", imag_detect_in[17]);
+			printf("%lf", imag_detect_in[19]);
+			printf("\n");
+		}
+*/
+			// INPUTS IM AND REAL TO GET PHASE ARE ALWAYS IDENITCAL
 			get_phase(real_detect_in, imag_detect_in, prs_signal);
-			//current_prs_signal[j] = ~bit;
-
-			//for(int i=0; i<128; i++){
-			//	printf("%d",prs_signal[i]);
-			//}
-	
+			
 			xored_output = xor(prs_code[1],prs_code[0],prs_signal);
-			fwrite(&xored_output, sizeof(signed char), 1, fout);
 			
 			sample_bits[bit_count] = xored_output;
 			bit_count++;
@@ -249,14 +216,15 @@ int main(int argc, char *argv[])
 				// write to file
 				total_bits_value = (signed char)total_bits_value;
 
-				//fwrite(&total_bits_value, sizeof(signed char), 1, fout);
+				fwrite(&total_bits_value, sizeof(signed char), 1, fout);
 				total_bits_value = (signed)total_bits_value;
 				total_bits_value = 0;
 			}
 		
 		}
 
-		for(int i=0; i<2048; i++){
+		for(int i=0; i<2048; i++)
+		{
 			real_detect_in[i] = modulated_signal[i];
 		}
 	}

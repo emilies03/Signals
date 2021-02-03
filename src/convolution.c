@@ -9,6 +9,7 @@ int get_phase(float real_detect_in[2048], float imaginary_detect_in[2048], int p
 {   	
 	float modulated_signal_env[16] = {0};
 	int current_bit = prs_signal[127];
+	// printf("%d \n", current_bit);
 
 	for(int j=0; j<128; j++){
 	
@@ -25,9 +26,16 @@ int get_phase(float real_detect_in[2048], float imaginary_detect_in[2048], int p
 					current_bit = 0;
 				}
 			}
-			if(modulated_signal_env[i]>0.6){
-			}
 		}
+		//printf("%d \n", current_bit);
+
+		printf("%lf ", real_detect_in[j*16+1]);
+		printf("%lf			", real_detect_in[j*16+3]);
+		printf("%lf ", imaginary_detect_in[j*16+1]);
+		printf("%lf			", imaginary_detect_in[j*16+3]);
+		printf("%lf ", modulated_signal_env[1]);
+		printf("%lf	", modulated_signal_env[3]);
+		printf("\n");
 
 		prs_signal[j] = current_bit;
 		//printf("%d\n", prs_signal[j]);
