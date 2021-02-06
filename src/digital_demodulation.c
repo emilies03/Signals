@@ -41,7 +41,6 @@ int main(int argc, char *argv[])
 	int iterations = 0;
 	int prs_signal[128] = {0};
 	prs_code = (uint64_t *) malloc(sizeof(uint64_t)*2);
-	signed total_bits_value = 0;
 
 	float real_detect_in[2048] = {0};
 	float imag_detect_in[2048] = {0};
@@ -162,43 +161,37 @@ int main(int argc, char *argv[])
 			
 			sample_bits[bit_count] = xored_output;
 			bit_count++;
-			total_bits_value = 0;
-			uint8_t decimal = 0;
+
+
+			signed total_bits_value = 0;
+			// when you have 8 bits, covert to number through 2s complement
 			if (bit_count > 7) 
 			{	
+				// if first bit is negative, inverse the bits, convert to int and add 1 then make negative 
 				if (sample_bits[0]==1)
 				{
-					int inversed_bits[8] ={0};
 					for (int i=1; i<8; i++)
 					{
-						decimal = decimal +(sample_bits[i]*pow(2,(7-i)));
-					}
-					decimal -= 1;
-					for (int i=0; i<7; i++)
-					{
-						if (decimal!=0)
+						if(sample_bits[i] ==0)
 						{
-							inversed_bits[7-i] = (decimal-1)%2;
-							decimal = decimal/2;
+							sample_bits[i]=1;
 						}
 						else
 						{
-							inversed_bits[7-i]=1;
+							sample_bits[i]=0;
 						}
-						 
+
 					}
-					for (int i=1; i<8; i++)
-					{
-						total_bits_value = total_bits_value +(inversed_bits[i]*pow(2,(7-i)));
-					}
-					total_bits_value = -total_bits_value;
 				}
-				else
+				for (int i=1; i<8; i++)
 				{
-					for (int i=1; i<8; i++)
-					{
-						total_bits_value = total_bits_value +(sample_bits[i]*pow(2,(7-i)));
-					}
+					total_bits_value = total_bits_value +(sample_bits[i]*pow(2,(7-i)));
+				}
+				
+				if (sample_bits[0]==1)
+				{
+					total_bits_value += 1;
+					total_bits_value = -total_bits_value;
 				}
 								
 				bit_count =0;
