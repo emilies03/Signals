@@ -5,7 +5,6 @@
 #include <stdbool.h>
 #include <time.h>
 #include <fftw3.h>
-#include "hilbert_filter.c"
 #include "kaiser_window.c"
 #include "convolution.c"
 #include "xor.c"
@@ -13,7 +12,7 @@
 #define filter_order 40
 #define beta 4.54
 
-int hilbert_filter();
+int kaiser_and_hilbert(int, double*, float);
 int convolution();
 int block_convolution();
 int phase_detection();
@@ -44,31 +43,20 @@ int main(int argc, char *argv[])
 	signed total_bits_value = 0;
 
 	float real_detect_in[2048] = {0};
-	float prev_real_in[2048] = {0};
-	float real_in[2048] = {0};
 	float imag_detect_in[2048] = {0};
 
-	double *fft_windowed_filter_coefficients;
-	fft_windowed_filter_coefficients = fftw_malloc((2088)*sizeof(double));
-	double *fft_modulated_signal_segment;
-	fft_modulated_signal_segment = fftw_malloc((2088)*sizeof(double));
-	double *fft_result;
-	fft_result = fftw_malloc((2088)*sizeof(double));
-	double *inverse_fft_result;
-	inverse_fft_result = fftw_malloc((2088)*sizeof(double));
+	float prev_real_in[2048] = {0};
+	float real_in[2048] = {0};
 	
-	float hilbert_filter_coefficients[filter_order+1];
-	hilbert_filter(filter_order, hilbert_filter_coefficients);
+	double *fft_windowed_filter_coefficients, *fft_modulated_signal_segment, *fft_result, *inverse_fft_result;
 
-	float kaiser_filter_coefficients[filter_order+1];
-	kaiser_window(filter_order, kaiser_filter_coefficients, beta);
+	fft_windowed_filter_coefficients = fftw_malloc((2088)*sizeof(double));
+	fft_modulated_signal_segment = fftw_malloc((2088)*sizeof(double));
+	fft_result = fftw_malloc((2088)*sizeof(double));
+	inverse_fft_result = fftw_malloc((2088)*sizeof(double));
 
 	double windowed_filter_coefficients[2088] = {0};
-
-	for(int i=0; i<= filter_order; i++)
-	{
-		windowed_filter_coefficients[i] = kaiser_filter_coefficients[i] * hilbert_filter_coefficients[i];
-	};	
+	kaiser_and_hilbert(filter_order, windowed_filter_coefficients, beta);
 
 	signal_plan = fftw_plan_r2r_1d(2088, modulated_signal_in, fft_modulated_signal_segment, FFTW_R2HC, FFTW_ESTIMATE);
 	filter_plan = fftw_plan_r2r_1d(2088, windowed_filter_coefficients, fft_windowed_filter_coefficients, FFTW_R2HC, FFTW_ESTIMATE);

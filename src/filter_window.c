@@ -5,20 +5,34 @@
 float bessel();
 int factorial();
 
-int kaiser_window(int filter_order, float kaiser_filter_coefficients[filter_order+1], float beta){
+int kaiser_and_hilbert(int filter_order, double windowed_filter_coefficients[2088], float beta){
     
     // use kaiser window definition from MATLAB online rather than definition in handouts
-
     int n;
-    double x;
+    double x, hilbert, kaiser;
 
-    //printf("finding kaiser window coefficients\n");
+
     float denominator = bessel(beta);
     for(int i=0; i<=filter_order; i++){
+
+        // Hilbert filter:
         n = i - filter_order/2;
+        if(n % 2 == 0)
+        {
+            hilbert = 0;
+        }
+        else
+        {
+            hilbert = 2/(n*M_PI);
+        }
+
+        // Kaiser window:
         x = beta * sqrt(1-pow((double)n/20,2));
         float numerator = bessel(x);
-        kaiser_filter_coefficients[i] = numerator/denominator;
+        kaiser = numerator/denominator;
+
+        windowed_filter_coefficients[i]= kaiser * hilbert;
+
     }
     return 1;
 }
