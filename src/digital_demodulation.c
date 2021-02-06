@@ -1,11 +1,12 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<stdint.h>
+#include <string.h>
 #include<math.h>
 #include <stdbool.h>
 #include <time.h>
 #include <fftw3.h>
-#include "kaiser_window.c"
+#include "filter_window.c"
 #include "convolution.c"
 #include "xor.c"
 
@@ -61,9 +62,11 @@ int main(int argc, char *argv[])
 	signal_plan = fftw_plan_r2r_1d(2088, modulated_signal_in, fft_modulated_signal_segment, FFTW_R2HC, FFTW_ESTIMATE);
 	filter_plan = fftw_plan_r2r_1d(2088, windowed_filter_coefficients, fft_windowed_filter_coefficients, FFTW_R2HC, FFTW_ESTIMATE);
 	inverse_plan = fftw_plan_r2r_1d(2088, fft_result, inverse_fft_result, FFTW_HC2R, FFTW_ESTIMATE);
+	
+	// fft transfor of filter variables
 	fftw_execute(filter_plan);
 
-
+	// open and read the PRS file
 	fin2=fopen(argv[2],"rb");
 	if(fin2 == NULL) 
 	{
@@ -73,6 +76,7 @@ int main(int argc, char *argv[])
 	while (fread(prs_code, sizeof(uint64_t), 2, fin2));
 	fclose(fin2);
 
+	// open and read the modulated signal
 	fin1=fopen(argv[1],"rb");
 	if(fin1 == NULL) 
 	{
@@ -80,6 +84,7 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 	
+	// open the output file to write to
 	fout=fopen(argv[3],"w+b");
 	if(fout == NULL) 
 	{
@@ -89,56 +94,58 @@ int main(int argc, char *argv[])
 
 	while(fread(modulated_signal, sizeof(float), 2048, fin1))
 	{	
+		// padding signal with 40 trailing 0s for convolution
 		for(int i=0; i<2048; i++)
 		{
 			modulated_signal_in[i] = modulated_signal[i];
 		}
 
+		// fft transform modulated signal
 		fftw_execute(signal_plan);
 
+		// multiply fft transformed signals
 		fft_result[0] = fft_modulated_signal_segment[0]*fft_windowed_filter_coefficients[0];
-
 		for(int i=1;i<(2088+1)/2;i++) 
 		{
 			fft_result[i] = fft_modulated_signal_segment[i]*fft_windowed_filter_coefficients[i]-fft_modulated_signal_segment[2088-i]*fft_windowed_filter_coefficients[2088-i]; //real
 			fft_result[2088-i] = fft_modulated_signal_segment[2088-i]*fft_windowed_filter_coefficients[i]+fft_modulated_signal_segment[i]*fft_windowed_filter_coefficients[2088-i]; //imag
 		}	
-
 		// not necessary for even filter order
 		if(2088 % 2 == 0)
 		{
 			fft_result[2088/2] = fft_modulated_signal_segment[2088/2]*fft_windowed_filter_coefficients[2088/2];
 		}
 		
-		fftw_execute(inverse_plan);
-		
-		for(int i=0; i<2088; i++)
-		{
-			inverse_fft_result[i] = inverse_fft_result[i]/2088;
-		}
 
+		// transform result back to time domain
+		fftw_execute(inverse_plan);
+
+		// need to divide inverse fft by 2088
+		// add tail and save new tail
 		for(int i=0; i<filter_order; i++)
 		{
-			inverse_fft_result[i] = inverse_fft_result[i]+ tail[i];
+			inverse_fft_result[i] = (inverse_fft_result[i]/2088)+ tail[i];
+			tail[i] = inverse_fft_result[i+2048]/2088;
 		}
 
-    	for(int i=0; i<2048; i++)
+		// set previous and current imaginary
+    	for(int i=0; i<filter_order; i++)
 		{
 			previous_imaginary[i] = modulated_signal_imaginary[i];
 			modulated_signal_imaginary[i] = inverse_fft_result[i];
 		} 
-
-    	for(int i=0; i<filter_order; i++)
+    	for(int i=filter_order; i<2048; i++)
 		{
-			tail[i] = inverse_fft_result[i+2048];
-		}
+			previous_imaginary[i] = modulated_signal_imaginary[i];
+			modulated_signal_imaginary[i] = inverse_fft_result[i]/2088;
+		} 
 
+		// take last 2002 and first 36
 		for(int i=0; i<2028-16; i++)
 		{
 			imag_detect_in[i] = previous_imaginary[i+20+16];
 			real_detect_in[i] = prev_real_in[i+16];
 		}
-
 		for(int i=0; i<20+16; i++)
 		{
 			imag_detect_in[i+2028-16] = modulated_signal_imaginary[i];
@@ -146,7 +153,6 @@ int main(int argc, char *argv[])
 		}
 		
 		iterations += 1;
-
 		if(iterations>1)
 		{	
 
