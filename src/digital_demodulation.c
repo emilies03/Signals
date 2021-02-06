@@ -44,6 +44,8 @@ int main(int argc, char *argv[])
 	signed total_bits_value = 0;
 
 	float real_detect_in[2048] = {0};
+	float prev_real_in[2048] = {0};
+	float real_in[2048] = {0};
 	float imag_detect_in[2048] = {0};
 
 	double *fft_windowed_filter_coefficients;
@@ -143,29 +145,23 @@ int main(int argc, char *argv[])
 			tail[i] = inverse_fft_result[i+2048];
 		}
 
-		for(int i=0; i<2028; i++)
+		for(int i=0; i<2028-16; i++)
 		{
-			imag_detect_in[i] = previous_imaginary[i+20];
+			imag_detect_in[i] = previous_imaginary[i+20+16];
+			real_detect_in[i] = prev_real_in[i+16];
 		}
 
-		for(int i=0; i<20; i++)
+		for(int i=0; i<20+16; i++)
 		{
-			imag_detect_in[i+2028] = modulated_signal_imaginary[i];
+			imag_detect_in[i+2028-16] = modulated_signal_imaginary[i];
+			real_detect_in[i+2028-16] = real_in[i];
 		}
 		
 		iterations += 1;
 
 		if(iterations>1)
 		{	
-		
-/*		if(iterations<30)
-		{
-			printf("%lf ", imag_detect_in[17]);
-			printf("%lf", imag_detect_in[19]);
-			printf("\n");
-		}
-*/
-			// INPUTS IM AND REAL TO GET PHASE ARE ALWAYS IDENITCAL
+
 			get_phase(real_detect_in, imag_detect_in, prs_signal);
 			
 			xored_output = xor(prs_code[1],prs_code[0],prs_signal);
@@ -225,7 +221,8 @@ int main(int argc, char *argv[])
 
 		for(int i=0; i<2048; i++)
 		{
-			real_detect_in[i] = modulated_signal[i];
+			prev_real_in[i] = real_in[i];
+			real_in[i] = modulated_signal[i];
 		}
 	}
 
