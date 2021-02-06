@@ -6,6 +6,7 @@ unsigned long long bin_to_uint64();
 double uint64_to_bin();
 
 int xor(unsigned long long prs1, unsigned long long prs2, int in_array[128]){
+    
     int i, final_bit;
     int array1[64], array2[64];
     unsigned long long num1, num2;
@@ -13,14 +14,13 @@ int xor(unsigned long long prs1, unsigned long long prs2, int in_array[128]){
     double average_bit_1, average_bit_2;
 
     // split 128 bit in_array into 2, 64bit arrays
-    for (i=0; i<128; i++){
-        if(i<64){
-            array1[63-i] = in_array[127-i];
-        }
-        else{
-            array2[63-i+64] = in_array[127-i];
-        }
-
+    for (i=0; i<64; i++)
+    {
+        array1[63-i] = in_array[127-i];
+    }
+   for (i=64; i<128; i++)
+    {
+        array2[63-i+64] = in_array[127-i];    
     }
 
     // convert binary 64bit arrays into uint64
