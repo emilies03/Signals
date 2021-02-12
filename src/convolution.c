@@ -1,9 +1,12 @@
+// Group 12
+// Emilie Stone
+// Cameron Gibb
+// Charlie Hardwick
+
 #include<stdio.h>
 #include<stdlib.h>
 #include<stdint.h>
 #include<math.h>
-
-
 
 int get_phase(float real_detect_in[2048], float imaginary_detect_in[2048], int prs_signal[128])
 {   	

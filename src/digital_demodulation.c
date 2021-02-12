@@ -1,10 +1,14 @@
+// Group 12
+// Emilie Stone
+// Cameron Gibb
+// Charlie Hardwick
+
 #include<stdio.h>
 #include<stdlib.h>
 #include<stdint.h>
 #include <string.h>
 #include<math.h>
 #include <stdbool.h>
-#include <time.h>
 #include <fftw3.h>
 #include "filter_window.c"
 #include "convolution.c"
@@ -26,9 +30,6 @@ fftw_plan filter_plan, signal_plan, inverse_plan;
 
 int main(int argc, char *argv[])
 {	
-	// Timing code to remove
-	clock_t t;
-	t = clock();
 
 	FILE *fin1, *fin2, *fout;
 	float modulated_signal[2048];
@@ -158,7 +159,6 @@ int main(int argc, char *argv[])
 			get_phase(real_detect_in, imag_detect_in, prs_signal);
 			
 			xored_output = xor(prs_code[1],prs_code[0],prs_signal);
-			
 			sample_bits[bit_count] = xored_output;
 			bit_count++;
 
@@ -198,7 +198,6 @@ int main(int argc, char *argv[])
 
 				// write to file
 				total_bits_value = (signed char)total_bits_value;
-
 				fwrite(&total_bits_value, sizeof(signed char), 1, fout);
 				total_bits_value = (signed)total_bits_value;
 				total_bits_value = 0;
@@ -212,11 +211,6 @@ int main(int argc, char *argv[])
 			real_in[i] = modulated_signal[i];
 		}
 	}
-
-	// Timing code to remove 
-	t = clock() - t;
-	double time_taken = ((double)t)/CLOCKS_PER_SEC;
-    printf("Code took %f seconds to execute \n", time_taken);
 
 	fclose(fin1);
 	fclose(fout);

@@ -1,3 +1,8 @@
+// Group 12
+// Emilie Stone
+// Cameron Gibb
+// Charlie Hardwick
+
 #include<stdio.h>
 #include<stdlib.h>
 #include<math.h>
